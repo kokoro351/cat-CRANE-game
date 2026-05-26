@@ -10,12 +10,12 @@
     <main class="game-shell" aria-label="cat-CRANE game">
       <section class="hud" aria-label="game status">
         <div>
-          <p class="label">Score</p>
-          <p id="score">0</p>
+          <p class="label">Distance</p>
+          <p><span id="distance">0</span>m</p>
         </div>
         <div>
-          <p class="label">Time</p>
-          <p><span id="time">60</span>s</p>
+          <p class="label">Swing</p>
+          <p><span id="swing">0</span>°</p>
         </div>
         <button id="restart" type="button">Restart</button>
       </section>
@@ -23,9 +23,9 @@
       <canvas id="game" width="390" height="680" aria-label="cat crane play field"></canvas>
 
       <section class="controls" aria-label="game controls">
-        <button id="left" type="button" aria-label="move claw left">Left</button>
-        <button id="drop" type="button" aria-label="drop claw">Drop</button>
-        <button id="right" type="button" aria-label="move claw right">Right</button>
+        <button id="brake" type="button" aria-label="apply brake">Brake</button>
+        <button id="notch" type="button" aria-label="apply acceleration notch">Notch</button>
+        <button id="coast" type="button" aria-label="coast without power">Coast</button>
       </section>
     </main>
 

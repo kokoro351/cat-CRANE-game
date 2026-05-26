@@ -9,6 +9,8 @@
   --accent: #ef5d43;
   --accent-dark: #b83f2b;
   --teal: #159a9c;
+  --warning: #f0b429;
+  --danger: #d64545;
 }
 
 * {
@@ -108,6 +110,14 @@ button:active {
   background: var(--ink);
 }
 
-#drop {
+#notch {
+  background: var(--teal);
+}
+
+#brake {
   background: var(--accent-dark);
+}
+
+#coast {
+  background: #52616d;
 }

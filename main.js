@@ -1,194 +1,232 @@
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
-const scoreEl = document.querySelector("#score");
-const timeEl = document.querySelector("#time");
+const distanceEl = document.querySelector("#distance");
+const swingEl = document.querySelector("#swing");
 const restartBtn = document.querySelector("#restart");
-const leftBtn = document.querySelector("#left");
-const rightBtn = document.querySelector("#right");
-const dropBtn = document.querySelector("#drop");
+const brakeBtn = document.querySelector("#brake");
+const notchBtn = document.querySelector("#notch");
+const coastBtn = document.querySelector("#coast");
 
 const W = canvas.width;
 const H = canvas.height;
-const floorY = H - 92;
+const railY = 96;
+const groundY = H - 86;
+const ropeLength = 142;
+const goalDistance = 520;
+const dangerAngle = 34;
+const warningAngle = 24;
 
 const state = {
-  score: 0,
-  time: 60,
-  clawX: W / 2,
-  clawY: 94,
-  rope: 70,
-  dir: 1,
-  phase: "aim",
-  held: null,
-  cats: [],
-  keys: new Set(),
+  distance: 0,
+  speed: 0,
+  accel: 0,
+  angle: 0,
+  angularVelocity: 0,
+  mode: "coast",
+  result: "running",
+  message: "",
   last: performance.now(),
-  ended: false,
+  keys: new Set(),
+  fallY: 0,
 };
 
-const catColors = ["#f7a65a", "#6f8798", "#f2f0df", "#222b35", "#d8946f"];
-
 function reset() {
-  state.score = 0;
-  state.time = 60;
-  state.clawX = W / 2;
-  state.rope = 70;
-  state.phase = "aim";
-  state.held = null;
-  state.ended = false;
-  state.cats = Array.from({ length: 9 }, (_, i) => ({
-    x: 45 + (i % 3) * 118 + Math.random() * 16,
-    y: floorY - 28 - Math.floor(i / 3) * 48,
-    r: 22 + Math.random() * 5,
-    color: catColors[i % catColors.length],
-    saved: false,
-    vx: (Math.random() - 0.5) * 0.18,
-  }));
+  state.distance = 0;
+  state.speed = 0;
+  state.accel = 0;
+  state.angle = 0.08;
+  state.angularVelocity = 0;
+  state.mode = "coast";
+  state.result = "running";
+  state.message = "";
+  state.last = performance.now();
+  state.fallY = 0;
   updateHud();
 }
 
 function updateHud() {
-  scoreEl.textContent = state.score;
-  timeEl.textContent = Math.max(0, Math.ceil(state.time));
+  distanceEl.textContent = Math.floor(state.distance);
+  swingEl.textContent = Math.round(Math.abs(toDeg(state.angle)));
 }
 
-function startDrop() {
-  if (state.phase === "aim" && !state.ended) {
-    state.phase = "down";
-    state.held = null;
-  }
+function toDeg(rad) {
+  return rad * 180 / Math.PI;
 }
 
-function moveClaw(delta) {
-  if (state.phase !== "aim" || state.ended) return;
-  state.clawX = Math.max(42, Math.min(W - 42, state.clawX + delta));
+function setMode(mode) {
+  if (state.result !== "running") return;
+  state.mode = mode;
+}
+
+function readInputMode() {
+  if (state.keys.has(" ") || state.keys.has("ArrowRight") || state.keys.has("d")) return "notch";
+  if (state.keys.has("ArrowDown") || state.keys.has("s")) return "brake";
+  if (state.mode === "notch-hold") return "notch";
+  if (state.mode === "brake-hold") return "brake";
+  return state.mode;
 }
 
 function step(now) {
   const dt = Math.min(0.033, (now - state.last) / 1000);
   state.last = now;
 
-  if (!state.ended) {
-    state.time -= dt;
-    if (state.time <= 0) {
-      state.time = 0;
-      state.ended = true;
-    }
+  if (state.result === "running") {
+    updatePhysics(dt);
+  } else if (state.result === "dropped") {
+    state.fallY = Math.min(groundY - 24, state.fallY + 620 * dt);
   }
 
-  if (state.keys.has("ArrowLeft") || state.keys.has("a")) moveClaw(-260 * dt);
-  if (state.keys.has("ArrowRight") || state.keys.has("d")) moveClaw(260 * dt);
-
-  updateCats(dt);
-  updateClaw(dt);
   draw();
   updateHud();
   requestAnimationFrame(step);
 }
 
-function updateCats(dt) {
-  for (const cat of state.cats) {
-    if (cat.saved || cat === state.held) continue;
-    cat.x += cat.vx * dt * 60;
-    if (cat.x < cat.r + 10 || cat.x > W - cat.r - 10) cat.vx *= -1;
+function updatePhysics(dt) {
+  const input = readInputMode();
+  const targetAccel = input === "notch" ? 70 : input === "brake" ? -110 : -16;
+  state.accel += (targetAccel - state.accel) * Math.min(1, dt * 9);
+
+  state.speed = Math.max(0, Math.min(132, state.speed + state.accel * dt));
+  state.distance += state.speed * dt;
+
+  const gravity = 9.8;
+  const lengthMeters = 2.4;
+  const trolleyAccel = state.accel / 20;
+  const pendulumForce = -(gravity / lengthMeters) * Math.sin(state.angle) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
+  state.angularVelocity += pendulumForce * dt;
+  state.angularVelocity *= 0.998;
+  state.angle += state.angularVelocity * dt;
+
+  if (Math.abs(toDeg(state.angle)) >= dangerAngle) {
+    state.result = "dropped";
+    state.message = "Cat dropped!";
+    state.fallY = catPosition().y;
+  } else if (state.distance >= goalDistance) {
+    state.result = "cleared";
+    state.message = "Goal!";
+    state.distance = goalDistance;
   }
 }
 
-function updateClaw(dt) {
-  if (state.phase === "aim") {
-    state.clawX += state.dir * 88 * dt;
-    if (state.clawX > W - 46 || state.clawX < 46) state.dir *= -1;
-    return;
-  }
+function craneX() {
+  return 74 + (state.distance / goalDistance) * (W - 148);
+}
 
-  if (state.phase === "down") {
-    state.rope += 270 * dt;
-    const hookY = 24 + state.rope;
-    const target = state.cats.find((cat) => !cat.saved && Math.hypot(cat.x - state.clawX, cat.y - hookY) < cat.r + 8);
-    if (target) {
-      state.held = target;
-      state.phase = "up";
-    } else if (hookY > floorY - 8) {
-      state.phase = "up";
-    }
-    return;
-  }
-
-  if (state.phase === "up") {
-    state.rope -= 250 * dt;
-    if (state.held) {
-      state.held.x = state.clawX;
-      state.held.y = 24 + state.rope + 32;
-    }
-    if (state.rope <= 70) {
-      state.rope = 70;
-      if (state.held) {
-        state.held.saved = true;
-        state.score += 100;
-        state.held = null;
-      }
-      state.phase = "aim";
-    }
-  }
+function catPosition() {
+  const x = craneX() + Math.sin(state.angle) * ropeLength;
+  const y = railY + 34 + Math.cos(state.angle) * ropeLength;
+  return { x, y };
 }
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
   drawScene();
-  for (const cat of state.cats) {
-    if (!cat.saved) drawCat(cat.x, cat.y, cat.r, cat.color);
-  }
-  drawClaw();
-  if (state.ended) drawEndCard();
+  drawTrack();
+  drawCrane();
+  drawMeters();
+  if (state.result !== "running") drawResult();
 }
 
 function drawScene() {
   const sky = ctx.createLinearGradient(0, 0, 0, H);
-  sky.addColorStop(0, "#9bd8ff");
-  sky.addColorStop(1, "#eaf8ff");
+  sky.addColorStop(0, "#a7ddff");
+  sky.addColorStop(0.62, "#f4fbff");
+  sky.addColorStop(1, "#f5d77d");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = "#3c5968";
-  ctx.fillRect(28, 42, W - 56, 14);
-  ctx.fillRect(38, 42, 12, floorY - 20);
-  ctx.fillRect(W - 50, 42, 12, floorY - 20);
-
-  ctx.fillStyle = "#f6d47c";
-  ctx.fillRect(0, floorY, W, H - floorY);
-  ctx.fillStyle = "#dfb85d";
-  for (let x = -20; x < W; x += 36) {
-    ctx.fillRect(x, floorY + 34, 20, 7);
+  ctx.fillStyle = "#f2c968";
+  ctx.fillRect(0, groundY, W, H - groundY);
+  ctx.fillStyle = "#d9b053";
+  for (let x = -12; x < W; x += 42) {
+    ctx.fillRect(x, groundY + 28, 24, 7);
   }
 
-  ctx.fillStyle = "rgb(255 255 255 / 0.5)";
+  ctx.fillStyle = "rgb(255 255 255 / 0.58)";
   ctx.beginPath();
-  ctx.arc(74, 118, 34, 0, Math.PI * 2);
-  ctx.arc(110, 118, 25, 0, Math.PI * 2);
-  ctx.arc(137, 125, 29, 0, Math.PI * 2);
+  ctx.arc(70, 178, 30, 0, Math.PI * 2);
+  ctx.arc(105, 176, 24, 0, Math.PI * 2);
+  ctx.arc(132, 184, 28, 0, Math.PI * 2);
   ctx.fill();
 }
 
-function drawClaw() {
-  const hookY = 24 + state.rope;
-  ctx.strokeStyle = "#25333f";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(state.clawX, 56);
-  ctx.lineTo(state.clawX, hookY);
-  ctx.stroke();
+function drawTrack() {
+  ctx.fillStyle = "#314a59";
+  ctx.fillRect(28, railY - 20, W - 56, 14);
+  ctx.fillRect(38, railY - 20, 12, groundY - railY + 8);
+  ctx.fillRect(W - 50, railY - 20, 12, groundY - railY + 8);
+
+  const goalX = 74 + W - 148;
+  ctx.fillStyle = "#159a9c";
+  ctx.fillRect(goalX - 9, railY - 48, 18, 54);
+  ctx.fillStyle = "#fff";
+  ctx.font = "800 12px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("GOAL", goalX, railY - 55);
+  ctx.textAlign = "left";
+}
+
+function drawCrane() {
+  const x = craneX();
+  const hookY = railY + 34;
+  const cat = catPosition();
 
   ctx.fillStyle = "#ef5d43";
-  ctx.fillRect(state.clawX - 28, 35, 56, 28);
+  ctx.fillRect(x - 31, railY - 36, 62, 32);
+  ctx.fillStyle = "#25333f";
+  ctx.fillRect(x - 20, railY - 7, 40, 16);
 
-  ctx.strokeStyle = "#25333f";
-  ctx.lineWidth = 7;
+  ctx.strokeStyle = swingColor();
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(state.clawX, hookY);
-  ctx.lineTo(state.clawX - 20, hookY + 25);
-  ctx.moveTo(state.clawX, hookY);
-  ctx.lineTo(state.clawX + 20, hookY + 25);
+  ctx.moveTo(x, hookY);
+  ctx.lineTo(cat.x, state.result === "dropped" ? state.fallY : cat.y);
   ctx.stroke();
+
+  if (state.result === "dropped") {
+    drawCat(cat.x, state.fallY, 24, "#f7a65a");
+  } else {
+    drawCat(cat.x, cat.y, 24, "#f7a65a");
+  }
+
+  ctx.fillStyle = "#25333f";
+  ctx.beginPath();
+  ctx.arc(x, hookY, 7, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function swingColor() {
+  const swing = Math.abs(toDeg(state.angle));
+  if (swing >= warningAngle) return "#d64545";
+  if (swing >= warningAngle * 0.65) return "#f0b429";
+  return "#25333f";
+}
+
+function drawMeters() {
+  const barX = 34;
+  const barY = H - 54;
+  const barW = W - 68;
+  const progress = state.distance / goalDistance;
+  const swing = Math.min(1, Math.abs(toDeg(state.angle)) / dangerAngle);
+
+  ctx.fillStyle = "rgb(255 255 255 / 0.78)";
+  ctx.fillRect(barX, barY - 38, barW, 16);
+  ctx.fillStyle = "#159a9c";
+  ctx.fillRect(barX, barY - 38, barW * progress, 16);
+  ctx.strokeStyle = "#25333f";
+  ctx.strokeRect(barX, barY - 38, barW, 16);
+
+  ctx.fillStyle = "rgb(255 255 255 / 0.78)";
+  ctx.fillRect(barX, barY, barW, 16);
+  ctx.fillStyle = swingColor();
+  ctx.fillRect(barX, barY, barW * swing, 16);
+  ctx.strokeStyle = "#25333f";
+  ctx.strokeRect(barX, barY, barW, 16);
+
+  ctx.fillStyle = "#17212b";
+  ctx.font = "700 12px system-ui, sans-serif";
+  ctx.fillText(`Mode: ${readInputMode().toUpperCase()}  Speed: ${Math.round(state.speed)}`, barX, barY - 48);
+  ctx.fillText("Swing limit", barX, barY - 7);
 }
 
 function drawCat(x, y, r, color) {
@@ -222,43 +260,39 @@ function drawCat(x, y, r, color) {
   ctx.stroke();
 }
 
-function drawEndCard() {
-  ctx.fillStyle = "rgb(23 33 43 / 0.74)";
+function drawResult() {
+  ctx.fillStyle = "rgb(23 33 43 / 0.76)";
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#fff";
   ctx.textAlign = "center";
-  ctx.font = "800 38px system-ui, sans-serif";
-  ctx.fillText("Time!", W / 2, H / 2 - 30);
-  ctx.font = "700 22px system-ui, sans-serif";
-  ctx.fillText(`Score ${state.score}`, W / 2, H / 2 + 12);
-  ctx.font = "600 15px system-ui, sans-serif";
-  ctx.fillText("Tap Restart to play again", W / 2, H / 2 + 46);
+  ctx.font = "800 40px system-ui, sans-serif";
+  ctx.fillText(state.message, W / 2, H / 2 - 28);
+  ctx.font = "700 18px system-ui, sans-serif";
+  const detail = state.result === "cleared"
+    ? "Smooth notch work."
+    : "Too much swing.";
+  ctx.fillText(detail, W / 2, H / 2 + 10);
+  ctx.font = "600 14px system-ui, sans-serif";
+  ctx.fillText("Tap Restart to try again", W / 2, H / 2 + 42);
   ctx.textAlign = "left";
 }
 
-function bindHold(button, delta) {
-  let timer = null;
-  const start = () => {
-    moveClaw(delta);
-    timer = setInterval(() => moveClaw(delta), 32);
-  };
-  const stop = () => {
-    clearInterval(timer);
-    timer = null;
-  };
-  button.addEventListener("pointerdown", start);
-  button.addEventListener("pointerup", stop);
-  button.addEventListener("pointerleave", stop);
-  button.addEventListener("pointercancel", stop);
+function bindHold(button, mode) {
+  button.addEventListener("pointerdown", () => setMode(`${mode}-hold`));
+  button.addEventListener("pointerup", () => setMode("coast"));
+  button.addEventListener("pointerleave", () => setMode("coast"));
+  button.addEventListener("pointercancel", () => setMode("coast"));
+  button.addEventListener("click", () => setMode(mode));
 }
 
-bindHold(leftBtn, -18);
-bindHold(rightBtn, 18);
-dropBtn.addEventListener("click", startDrop);
+bindHold(notchBtn, "notch");
+bindHold(brakeBtn, "brake");
+coastBtn.addEventListener("click", () => setMode("coast"));
 restartBtn.addEventListener("click", reset);
+
 window.addEventListener("keydown", (event) => {
+  if ([" ", "ArrowRight", "ArrowDown"].includes(event.key)) event.preventDefault();
   state.keys.add(event.key);
-  if (event.key === " " || event.key === "Enter") startDrop();
 });
 window.addEventListener("keyup", (event) => state.keys.delete(event.key));
 
