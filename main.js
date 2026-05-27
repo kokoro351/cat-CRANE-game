@@ -16,7 +16,9 @@ const railY = 96;
 const groundY = H - 86;
 const minRopeLength = 104;
 const maxRopeLength = 176;
-const goalDistance = 520;
+const goalDistance = 2200;
+const cameraLead = 120;
+const visibleWorld = W - 148;
 const dangerAngle = 34;
 const warningAngle = 24;
 
@@ -60,7 +62,7 @@ function reset() {
 }
 
 function updateHud() {
-  distanceEl.textContent = Math.floor(state.distance);
+  distanceEl.textContent = Math.floor(state.distance / 4);
   swingEl.textContent = Math.round(Math.abs(toDeg(state.angle)));
 }
 
@@ -135,7 +137,19 @@ function updatePhysics(dt) {
 }
 
 function craneX() {
-  return 74 + (state.distance / goalDistance) * (W - 148);
+  return worldToScreen(state.distance);
+}
+
+function cameraX() {
+  return Math.max(0, Math.min(goalDistance - visibleWorld, state.distance - cameraLead));
+}
+
+function worldToScreen(worldX) {
+  return worldX - cameraX() + 74;
+}
+
+function parallaxToScreen(worldX, factor) {
+  return worldX - cameraX() * factor + 74;
 }
 
 function loadPosition() {
@@ -161,28 +175,122 @@ function drawScene() {
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, W, H);
 
+  drawIndustrialBackground();
+
   ctx.fillStyle = "#f2c968";
   ctx.fillRect(0, groundY, W, H - groundY);
   ctx.fillStyle = "#d9b053";
-  for (let x = -12; x < W; x += 42) {
+  const groundOffset = -((cameraX() * 0.85) % 42);
+  for (let x = groundOffset - 42; x < W + 42; x += 42) {
     ctx.fillRect(x, groundY + 28, 24, 7);
   }
 
   ctx.fillStyle = "rgb(255 255 255 / 0.58)";
   ctx.beginPath();
-  ctx.arc(70, 178, 30, 0, Math.PI * 2);
-  ctx.arc(105, 176, 24, 0, Math.PI * 2);
-  ctx.arc(132, 184, 28, 0, Math.PI * 2);
+  const cloudX = parallaxToScreen(20, 0.18);
+  ctx.arc(cloudX, 178, 30, 0, Math.PI * 2);
+  ctx.arc(cloudX + 35, 176, 24, 0, Math.PI * 2);
+  ctx.arc(cloudX + 62, 184, 28, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function drawIndustrialBackground() {
+  drawDistantTowers();
+  drawFactoryBlock(180, 0.32, "#7f98a5");
+  drawFactoryBlock(820, 0.32, "#6f8794");
+  drawPortCranes();
+  drawStorageTanks();
+}
+
+function drawDistantTowers() {
+  ctx.strokeStyle = "rgb(65 88 100 / 0.38)";
+  ctx.lineWidth = 3;
+  for (let worldX = -120; worldX < goalDistance + 500; worldX += 360) {
+    const x = parallaxToScreen(worldX, 0.18);
+    const base = groundY - 84;
+    ctx.beginPath();
+    ctx.moveTo(x, base);
+    ctx.lineTo(x + 24, base - 122);
+    ctx.lineTo(x + 48, base);
+    ctx.moveTo(x + 10, base - 32);
+    ctx.lineTo(x + 38, base - 32);
+    ctx.moveTo(x + 16, base - 68);
+    ctx.lineTo(x + 32, base - 68);
+    ctx.moveTo(x + 24, base - 122);
+    ctx.lineTo(x + 24, base - 148);
+    ctx.stroke();
+  }
+}
+
+function drawFactoryBlock(worldX, factor, color) {
+  const x = parallaxToScreen(worldX, factor);
+  const y = groundY - 132;
+  ctx.fillStyle = `${color}99`;
+  ctx.fillRect(x, y + 62, 190, 70);
+  ctx.fillRect(x + 28, y + 36, 58, 96);
+  ctx.fillRect(x + 128, y + 16, 22, 116);
+  ctx.fillRect(x + 160, y - 4, 18, 136);
+
+  ctx.fillStyle = "rgb(245 251 255 / 0.48)";
+  ctx.beginPath();
+  ctx.arc(x + 171, y - 18, 14, 0, Math.PI * 2);
+  ctx.arc(x + 190, y - 24, 18, 0, Math.PI * 2);
+  ctx.arc(x + 213, y - 20, 13, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgb(255 255 255 / 0.48)";
+  for (let wx = x + 16; wx < x + 178; wx += 28) {
+    ctx.fillRect(wx, y + 82, 11, 10);
+  }
+}
+
+function drawPortCranes() {
+  ctx.strokeStyle = "rgb(48 69 80 / 0.5)";
+  ctx.lineWidth = 5;
+  for (let worldX = 520; worldX < goalDistance + 700; worldX += 690) {
+    const x = parallaxToScreen(worldX, 0.45);
+    const y = groundY - 132;
+    ctx.beginPath();
+    ctx.moveTo(x, groundY);
+    ctx.lineTo(x + 34, y);
+    ctx.lineTo(x + 126, y - 26);
+    ctx.moveTo(x + 34, y);
+    ctx.lineTo(x + 34, groundY);
+    ctx.moveTo(x + 94, y - 17);
+    ctx.lineTo(x + 94, y + 34);
+    ctx.stroke();
+    ctx.fillStyle = "rgb(48 69 80 / 0.48)";
+    ctx.fillRect(x + 84, y + 34, 20, 14);
+  }
+}
+
+function drawStorageTanks() {
+  ctx.fillStyle = "rgb(92 112 122 / 0.55)";
+  for (let worldX = 330; worldX < goalDistance + 500; worldX += 560) {
+    const x = parallaxToScreen(worldX, 0.38);
+    const y = groundY - 62;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 34, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(x - 34, y, 68, 44);
+    ctx.beginPath();
+    ctx.ellipse(x, y + 44, 34, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawTrack() {
   ctx.fillStyle = "#314a59";
-  ctx.fillRect(28, railY - 20, W - 56, 14);
-  ctx.fillRect(38, railY - 20, 12, groundY - railY + 8);
-  ctx.fillRect(W - 50, railY - 20, 12, groundY - railY + 8);
+  const railStart = worldToScreen(-80);
+  const railEnd = worldToScreen(goalDistance + 120);
+  ctx.fillRect(railStart, railY - 20, railEnd - railStart, 14);
 
-  const goalX = 74 + W - 148;
+  for (let worldX = 0; worldX <= goalDistance + 80; worldX += 320) {
+    const x = worldToScreen(worldX);
+    ctx.fillRect(x - 6, railY - 20, 12, groundY - railY + 8);
+  }
+
+  const goalX = worldToScreen(goalDistance);
   ctx.fillStyle = "#159a9c";
   ctx.fillRect(goalX - 9, railY - 48, 18, 54);
   ctx.fillStyle = "#fff";
