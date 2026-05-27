@@ -548,6 +548,10 @@ function updateDemo(dt) {
 
 function updateStageClearDemo(dt) {
   demoTime += dt;
+  if (currentStageIndex === 3) {
+    updateStage4ClearDemo(dt);
+    return;
+  }
   const targetRope = demoRopeTarget(state.distance + 165);
   const ropeError = targetRope - state.ropeLength;
   const y = ropeError > 28 ? 1 : ropeError < -28 ? -1 : 0;
@@ -558,6 +562,7 @@ function updateStageClearDemo(dt) {
   demoInput = { x, y, label };
   demoLabel.textContent = stageDemoInstruction(label);
   updatePhysics(dt, demoInput, false);
+  if (restartStageDemoIfInvalid()) return;
   state.angle *= Math.max(0, 1 - dt * 2.8);
   state.angularVelocity *= Math.max(0, 1 - dt * 4.2);
 
@@ -569,8 +574,56 @@ function updateStageClearDemo(dt) {
   }
 }
 
+function updateStage4ClearDemo(dt) {
+  const excavator = state.machines.find((machine) => machine.kind === "excavator");
+  const load = loadWorldPosition();
+  let x = 0;
+
+  if (!excavator) {
+    x = state.distance >= goalDistance ? 0 : 1;
+  } else {
+    const hit = machineHitRect(excavator);
+    const gapToShovel = hit.x - load.x;
+
+    if (excavator.phase === "waiting") {
+      x = state.distance < excavator.triggerX + 35 ? 1 : 0;
+    } else if (excavator.phase === "left") {
+      x = state.distance > 12 ? -1 : 0;
+    } else if (excavator.phase === "right") {
+      x = gapToShovel < 520 ? 0 : 1;
+    }
+  }
+
+  const label = x < 0 ? "LEFT" : x > 0 ? "RIGHT" : "COAST";
+  demoInput = { x, y: 0, label };
+  demoLabel.textContent = stageDemoInstruction(label);
+  updatePhysics(dt, demoInput, false);
+  if (restartStageDemoIfInvalid()) return;
+  state.angle *= Math.max(0, 1 - dt * 3.2);
+  state.angularVelocity *= Math.max(0, 1 - dt * 4.8);
+
+  if (state.distance >= goalDistance && demoTime > 1.1) {
+    state.distance = goalDistance;
+    state.speed = 0;
+    demoInput = { x: 0, y: 0, label: "COAST" };
+    showStageSelect();
+  }
+}
+
+function restartStageDemoIfInvalid() {
+  if (Math.abs(toDeg(state.angle)) >= dangerAngle || hitStageHazard()) {
+    reset();
+    demoTime = 0;
+    demoInput = { x: 0, y: 0, label: "COAST" };
+    demoLabel.textContent = `見本プレイ: ${currentStage.name}  接触したためやり直し`;
+    return true;
+  }
+  return false;
+}
+
 function stageDemoInstruction(label) {
   const prefix = `見本プレイ: ${currentStage.name}`;
+  if (label === "LEFT") return `${prefix}  ←で下がって重機を待つ`;
   if (label === "UP") return `${prefix}  ↑で巻き上げて避ける`;
   if (label === "DOWN") return `${prefix}  ↓で下げて通過高さへ`;
   if (label === "RIGHT") return `${prefix}  →を押して進む`;
@@ -630,7 +683,7 @@ function loadWorldPosition() {
 }
 
 function hitStageHazard() {
-  if (appScreen !== "game") return false;
+  if (appScreen !== "game" && appScreen !== "stageDemo") return false;
   const points = loadHitboxPoints(loadWorldPosition(), state.angle * 0.55);
   updateSwitches(points);
   return currentStage.obstacles.some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
