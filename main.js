@@ -78,27 +78,25 @@ const stages = [
   {
     name: "ステージ4",
     distance: 2600,
-    obstacles: [
-      { x: 520, y: 228, w: 120, h: 42 },
-      { x: 960, y: 430, w: 130, h: 42 },
-      { x: 1510, y: 310, w: 160, h: 44 },
+    obstacles: [],
+    gates: [],
+    machines: [
+      { kind: "excavator", startX: 1260, y: 398, w: 250, h: 126, triggerX: 700, leftX: 850, exitX: 2780, leftSpeed: 145, rightSpeed: 220 },
     ],
-    gates: [{ x: 1970, w: 34, gapY: 345, gap: 140, phase: 0.8, speed: 1.7 }],
   },
   {
     name: "ステージ5",
     distance: 2700,
-    obstacles: [
-      { x: 460, y: 380, w: 150, h: 48 },
-      { x: 910, y: 248, w: 150, h: 48 },
-      { x: 1370, y: 392, w: 160, h: 48 },
-      { x: 1900, y: 262, w: 150, h: 48 },
+    obstacles: [{ x: 1080, y: 246, w: 160, h: 48 }],
+    gates: [{ x: 1760, w: 34, gapY: 352, gap: 142, phase: 0.7, speed: 2.0 }],
+    machines: [
+      { kind: "forklift", startX: -620, y: 432, w: 190, h: 92, chaseGap: 420, speed: 112, maxX: 2920 },
     ],
-    gates: [],
   },
   {
     name: "ステージ6",
     distance: 2800,
+    windCenter: -0.12,
     obstacles: [],
     gates: [
       { x: 560, w: 34, gapY: 330, gap: 132, phase: 0.2, speed: 2.2 },
@@ -109,6 +107,7 @@ const stages = [
   {
     name: "ステージ7",
     distance: 2900,
+    windCenter: 0.12,
     obstacles: [
       { x: 520, y: 230, w: 180, h: 42 },
       { x: 920, y: 310, w: 110, h: 180 },
@@ -128,22 +127,27 @@ const stages = [
       { x: 1040, w: 34, gapY: 332, gap: 136, phase: 0.5, speed: 2.2 },
       { x: 2200, w: 34, gapY: 364, gap: 132, phase: 1.7, speed: 2.1 },
     ],
+    projectiles: [
+      { kind: "saw", y: 252, speed: 190, interval: 2.5, phase: 0 },
+      { kind: "wrench", y: 430, speed: 165, interval: 3.2, phase: 1.2 },
+    ],
   },
   {
     name: "ステージ9",
     distance: 3150,
     obstacles: [
-      { x: 470, y: 270, w: 126, h: 48 },
-      { x: 780, y: 392, w: 126, h: 48 },
-      { x: 1090, y: 270, w: 126, h: 48 },
-      { x: 1400, y: 392, w: 126, h: 48 },
-      { x: 1710, y: 270, w: 126, h: 48 },
+      { x: 520, y: 248, w: 126, h: 48 },
+      { x: 1160, y: 398, w: 126, h: 48 },
     ],
-    gates: [],
+    gates: [{ x: 1760, w: 40, gapY: 338, gap: 118, phase: 0, speed: 0, switchId: "tank1" }],
+    switches: [
+      { id: "tank1", x: 850, y: 374, w: 120, h: 98 },
+    ],
   },
   {
     name: "ステージ10",
     distance: 3200,
+    windCenter: -0.07,
     obstacles: [{ x: 2050, y: 390, w: 180, h: 48 }],
     gates: [
       { x: 650, w: 36, gapY: 344, gap: 126, phase: 0, speed: 2.5 },
@@ -154,6 +158,7 @@ const stages = [
   {
     name: "ステージ11",
     distance: 3300,
+    windCenter: 0.07,
     obstacles: [
       { x: 520, y: 420, w: 180, h: 48 },
       { x: 920, y: 218, w: 150, h: 48 },
@@ -175,6 +180,7 @@ const stages = [
       { x: 1260, w: 34, gapY: 320, gap: 124, phase: 2.2, speed: 2.6 },
       { x: 2500, w: 34, gapY: 350, gap: 124, phase: 1.2, speed: 2.5 },
     ],
+    projectiles: [{ kind: "wrench", y: 372, speed: 175, interval: 3.3, phase: 0.7 }],
   },
   {
     name: "ステージ13",
@@ -205,6 +211,7 @@ const stages = [
   {
     name: "ステージ15",
     distance: 3700,
+    windCenter: -0.08,
     obstacles: [
       { x: 500, y: 430, w: 150, h: 44 },
       { x: 820, y: 238, w: 150, h: 44 },
@@ -230,6 +237,7 @@ const stages = [
       { x: 1740, w: 36, gapY: 376, gap: 118, phase: 2.3, speed: 3.1 },
       { x: 3020, w: 36, gapY: 335, gap: 118, phase: 1.5, speed: 3.0 },
     ],
+    projectiles: [{ kind: "saw", y: 268, speed: 190, interval: 2.8, phase: 0.4 }],
   },
   {
     name: "ステージ17",
@@ -248,6 +256,7 @@ const stages = [
   {
     name: "ステージ18",
     distance: 4000,
+    windCenter: 0.09,
     obstacles: [
       { x: 700, y: 214, w: 150, h: 50 },
       { x: 1500, y: 440, w: 160, h: 50 },
@@ -278,6 +287,7 @@ const stages = [
   {
     name: "ステージ20",
     distance: 4300,
+    windCenter: -0.08,
     obstacles: [
       { x: 560, y: 230, w: 150, h: 46 },
       { x: 960, y: 420, w: 150, h: 46 },
@@ -290,6 +300,10 @@ const stages = [
       { x: 1780, w: 40, gapY: 330, gap: 108, phase: 0.4, speed: 3.6 },
       { x: 2180, w: 40, gapY: 370, gap: 108, phase: 2.0, speed: 3.6 },
       { x: 3830, w: 40, gapY: 348, gap: 108, phase: 1.2, speed: 3.7 },
+    ],
+    projectiles: [
+      { kind: "saw", y: 250, speed: 205, interval: 2.7, phase: 0.6 },
+      { kind: "wrench", y: 420, speed: 185, interval: 3.5, phase: 1.5 },
     ],
   },
 ];
@@ -328,6 +342,7 @@ const state = {
   result: "running",
   message: "",
   last: performance.now(),
+  stageTime: 0,
   keys: new Set(),
   buttons: new Set(),
   beamX: 0,
@@ -336,6 +351,8 @@ const state = {
   beamVy: 0,
   beamRotation: 0,
   beamSpin: 0,
+  machines: [],
+  switches: {},
 };
 
 let appScreen = "start";
@@ -354,12 +371,19 @@ function reset() {
   state.result = "running";
   state.message = "";
   state.last = performance.now();
+  state.stageTime = 0;
   state.beamX = 0;
   state.beamY = 0;
   state.beamVx = 0;
   state.beamVy = 0;
   state.beamRotation = 0;
   state.beamSpin = 0;
+  state.machines = (currentStage.machines || []).map((machine) => ({
+    ...machine,
+    x: machine.startX,
+    phase: machine.kind === "excavator" ? "waiting" : "chasing",
+  }));
+  state.switches = {};
   state.keys.clear();
   state.buttons.clear();
   updateHud();
@@ -394,8 +418,12 @@ function step(now) {
   if (appScreen === "demo") {
     updateDemo(dt);
   } else if (appScreen === "stageDemo") {
+    state.stageTime += dt;
+    updateStageMachines(dt);
     updateStageClearDemo(dt);
   } else if (appScreen === "game" && state.result === "running") {
+    state.stageTime += dt;
+    updateStageMachines(dt);
     updatePhysics(dt);
   } else if (appScreen === "game" && state.result === "dropped") {
     state.beamVy += 840 * dt;
@@ -424,7 +452,8 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
   const gravity = 9.8;
   const lengthMeters = state.ropeLength / 58;
   const trolleyAccel = state.accel / 26;
-  const pendulumForce = -(gravity / lengthMeters) * Math.sin(state.angle) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
+  const windCenter = currentStage.windCenter || 0;
+  const pendulumForce = -(gravity / lengthMeters) * Math.sin(state.angle - windCenter) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
   state.angularVelocity += pendulumForce * dt;
   state.angularVelocity *= 0.998;
   state.angle += state.angularVelocity * dt;
@@ -471,6 +500,32 @@ function throwLoad(x, y) {
   state.beamVy = -260;
   state.beamRotation = state.angle * 1.2;
   state.beamSpin = Math.sign(state.angle || 1) * 5.2;
+}
+
+function updateStageMachines(dt) {
+  state.machines.forEach((machine) => {
+    if (machine.kind === "excavator") updateExcavator(machine, dt);
+    if (machine.kind === "forklift") updateForklift(machine, dt);
+  });
+}
+
+function updateExcavator(machine, dt) {
+  if (machine.phase === "waiting" && state.distance > machine.triggerX) {
+    machine.phase = "left";
+  }
+  if (machine.phase === "left") {
+    machine.x = Math.max(machine.leftX, machine.x - machine.leftSpeed * dt);
+    if (machine.x <= machine.leftX) machine.phase = "right";
+  } else if (machine.phase === "right") {
+    machine.x = Math.min(machine.exitX, machine.x + machine.rightSpeed * dt);
+  }
+}
+
+function updateForklift(machine, dt) {
+  const targetX = Math.min(machine.maxX, state.distance - machine.chaseGap);
+  if (machine.x < targetX) {
+    machine.x = Math.min(targetX, machine.x + machine.speed * dt);
+  }
 }
 
 function updateDemo(dt) {
@@ -540,6 +595,12 @@ function demoRopeTarget(distance) {
   if (nearbyObstacle) {
     target = nearbyObstacle.y > 340 ? 86 : 210;
   }
+  const nearbyMachine = state.machines
+    .filter((machine) => machine.x + machine.w > distance - 170 && machine.x < distance + 320)
+    .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
+  if (nearbyMachine) {
+    target = nearbyMachine.y > 350 ? 80 : 210;
+  }
   return target;
 }
 
@@ -574,8 +635,11 @@ function loadWorldPosition() {
 function hitStageHazard() {
   if (appScreen !== "game") return false;
   const points = loadHitboxPoints(loadWorldPosition(), state.angle * 0.55);
+  updateSwitches(points);
   return currentStage.obstacles.some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
-    || currentStage.gates.some((gate) => points.some((point) => pointHitsGate(point, gate)));
+    || currentStage.gates.some((gate) => points.some((point) => pointHitsGate(point, gate)))
+    || state.machines.some((machine) => points.some((point) => pointInRect(point, machineHitRect(machine))))
+    || activeProjectiles().some((projectile) => points.some((point) => pointInRect(point, projectile.rect)));
 }
 
 function loadHitboxPoints(origin, rotation) {
@@ -605,6 +669,19 @@ function adjustedObstacle(obstacle) {
   };
 }
 
+function machineHitRect(machine) {
+  return { x: machine.x, y: machine.y, w: machine.w, h: machine.h };
+}
+
+function updateSwitches(points) {
+  (currentStage.switches || []).forEach((stageSwitch) => {
+    if (state.switches[stageSwitch.id]) return;
+    if (points.some((point) => pointInRect(point, stageSwitch))) {
+      state.switches[stageSwitch.id] = true;
+    }
+  });
+}
+
 function pointInRect(point, rect) {
   return point.x >= rect.x && point.x <= rect.x + rect.w
     && point.y >= rect.y && point.y <= rect.y + rect.h;
@@ -618,16 +695,38 @@ function gateClearance(gate) {
   return gate.gap + gateGapBonus;
 }
 
+function gateIsOpen(gate) {
+  return gate.switchId && state.switches[gate.switchId];
+}
+
 function pointHitsGate(point, gate) {
+  if (gateIsOpen(gate)) return false;
   if (point.x < gate.x || point.x > gate.x + gate.w) return false;
   const gapY = gateGapY(gate);
   const gap = gateClearance(gate);
   return point.y < gapY - gap / 2 || point.y > gapY + gap / 2;
 }
 
+function activeProjectiles() {
+  return (currentStage.projectiles || []).map((projectile, index) => {
+    const travel = W + 260;
+    const offset = ((state.stageTime + projectile.phase) * projectile.speed) % travel;
+    const x = cameraX() + W + 90 - offset;
+    const size = projectile.kind === "saw" ? 42 : 58;
+    return {
+      ...projectile,
+      index,
+      x,
+      size,
+      rect: { x: x - size / 2, y: projectile.y - size / 2, w: size, h: size },
+    };
+  });
+}
+
 function draw() {
   ctx.clearRect(0, 0, W, H);
   drawScene();
+  drawWind();
   drawTrack();
   drawStageHazards();
   drawCrane();
@@ -771,8 +870,149 @@ function drawTrack() {
 
 function drawStageHazards() {
   if (appScreen !== "game" && appScreen !== "stageDemo") return;
+  (currentStage.switches || []).forEach(drawSwitch);
   currentStage.obstacles.forEach(drawObstacle);
   currentStage.gates.forEach(drawGate);
+  state.machines.forEach(drawMachine);
+  activeProjectiles().forEach(drawProjectile);
+}
+
+function drawWind() {
+  if (!currentStage.windCenter || (appScreen !== "game" && appScreen !== "stageDemo")) return;
+  ctx.save();
+  ctx.strokeStyle = "rgb(21 154 156 / 0.45)";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  const direction = currentStage.windCenter < 0 ? -1 : 1;
+  for (let y = 168; y < 468; y += 86) {
+    const startX = direction < 0 ? W - 42 : 42;
+    const endX = startX + direction * 72;
+    ctx.beginPath();
+    ctx.moveTo(startX, y);
+    ctx.lineTo(endX, y);
+    ctx.lineTo(endX - direction * 14, y - 10);
+    ctx.moveTo(endX, y);
+    ctx.lineTo(endX - direction * 14, y + 10);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSwitch(stageSwitch) {
+  const x = worldToScreen(stageSwitch.x);
+  if (x + stageSwitch.w < -50 || x > W + 50) return;
+  const pressed = state.switches[stageSwitch.id];
+
+  ctx.save();
+  ctx.fillStyle = "rgb(68 112 130 / 0.46)";
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(x, stageSwitch.y, stageSwitch.w, stageSwitch.h, 12);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = pressed ? "#159a9c" : "#f0b429";
+  ctx.beginPath();
+  ctx.arc(x + stageSwitch.w / 2, stageSwitch.y + stageSwitch.h / 2, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#fff";
+  ctx.font = "900 12px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(pressed ? "OPEN" : "PUSH", x + stageSwitch.w / 2, stageSwitch.y + stageSwitch.h / 2 + 4);
+  ctx.textAlign = "left";
+  ctx.restore();
+}
+
+function drawMachine(machine) {
+  if (machine.kind === "excavator") drawExcavator(machine);
+  if (machine.kind === "forklift") drawForklift(machine);
+}
+
+function drawExcavator(machine) {
+  const x = worldToScreen(machine.x);
+  if (x + machine.w < -80 || x > W + 80) return;
+  const y = machine.y;
+
+  ctx.save();
+  ctx.fillStyle = "#f0b429";
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 4;
+  ctx.fillRect(x + 58, y + 38, 118, 52);
+  ctx.strokeRect(x + 58, y + 38, 118, 52);
+  ctx.fillStyle = "#d88918";
+  ctx.fillRect(x + 96, y + 6, 64, 44);
+  ctx.strokeRect(x + 96, y + 6, 64, 44);
+
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 14;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x + 72, y + 36);
+  ctx.lineTo(x + 22, y + 10);
+  ctx.lineTo(x - 14, y + 52);
+  ctx.stroke();
+  ctx.fillStyle = "#6f7f89";
+  ctx.beginPath();
+  ctx.moveTo(x - 28, y + 58);
+  ctx.lineTo(x + 24, y + 50);
+  ctx.lineTo(x + 12, y + 82);
+  ctx.lineTo(x - 32, y + 78);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#25333f";
+  ctx.fillRect(x + 44, y + 88, 150, 24);
+  ctx.fillStyle = "#17212b";
+  ctx.beginPath();
+  ctx.arc(x + 72, y + 104, 18, 0, Math.PI * 2);
+  ctx.arc(x + 156, y + 104, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgb(255 255 255 / 0.55)";
+  ctx.fillRect(x + 112, y + 18, 30, 18);
+  ctx.restore();
+}
+
+function drawForklift(machine) {
+  const x = worldToScreen(machine.x);
+  if (x + machine.w < -80 || x > W + 80) return;
+  const y = machine.y;
+
+  ctx.save();
+  ctx.fillStyle = "#ef5d43";
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 4;
+  ctx.fillRect(x + 34, y + 32, 94, 48);
+  ctx.strokeRect(x + 34, y + 32, 94, 48);
+  ctx.fillStyle = "#f0b429";
+  ctx.fillRect(x + 92, y + 6, 44, 46);
+  ctx.strokeRect(x + 92, y + 6, 44, 46);
+  ctx.fillStyle = "rgb(255 255 255 / 0.6)";
+  ctx.fillRect(x + 104, y + 16, 20, 18);
+
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(x + 148, y + 12);
+  ctx.lineTo(x + 148, y + 86);
+  ctx.moveTo(x + 148, y + 80);
+  ctx.lineTo(x + 196, y + 80);
+  ctx.moveTo(x + 148, y + 62);
+  ctx.lineTo(x + 190, y + 62);
+  ctx.stroke();
+
+  ctx.fillStyle = "#17212b";
+  ctx.beginPath();
+  ctx.arc(x + 58, y + 88, 16, 0, Math.PI * 2);
+  ctx.arc(x + 118, y + 88, 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.font = "900 13px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("CHASE", x + 80, y + 64);
+  ctx.textAlign = "left";
+  ctx.restore();
 }
 
 function drawObstacle(obstacle) {
@@ -813,6 +1053,20 @@ function drawGate(gate) {
   const bottomH = groundY - bottomY;
 
   ctx.save();
+  if (gateIsOpen(gate)) {
+    ctx.fillStyle = "rgb(21 154 156 / 0.48)";
+    ctx.strokeStyle = "#159a9c";
+    ctx.lineWidth = 4;
+    ctx.fillRect(x, topY, gate.w, groundY - topY);
+    ctx.strokeRect(x, topY, gate.w, groundY - topY);
+    ctx.fillStyle = "#fff";
+    ctx.font = "900 12px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("OPEN", x + gate.w / 2, topY + 34);
+    ctx.textAlign = "left";
+    ctx.restore();
+    return;
+  }
   ctx.fillStyle = "#d64545";
   ctx.strokeStyle = "#7f2532";
   ctx.lineWidth = 4;
@@ -826,6 +1080,45 @@ function drawGate(gate) {
   ctx.textAlign = "center";
   ctx.fillText("GATE", x + gate.w / 2, Math.max(topY + 22, gapY - gap / 2 - 8));
   ctx.textAlign = "left";
+  ctx.restore();
+}
+
+function drawProjectile(projectile) {
+  const x = worldToScreen(projectile.x);
+  if (x + projectile.size < -60 || x - projectile.size > W + 60) return;
+
+  ctx.save();
+  ctx.translate(x, projectile.y);
+  ctx.rotate((state.stageTime * 5 + projectile.index) * (projectile.kind === "saw" ? 1 : -0.8));
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 4;
+  if (projectile.kind === "saw") {
+    ctx.fillStyle = "#c8d2d8";
+    ctx.beginPath();
+    for (let i = 0; i < 18; i += 1) {
+      const radius = i % 2 === 0 ? 24 : 18;
+      const angle = i / 18 * Math.PI * 2;
+      const px = Math.cos(angle) * radius;
+      const py = Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#52616d";
+    ctx.beginPath();
+    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = "#8a98a2";
+    ctx.fillRect(-26, -6, 52, 12);
+    ctx.strokeRect(-26, -6, 52, 12);
+    ctx.beginPath();
+    ctx.arc(-30, 0, 13, Math.PI * 0.4, Math.PI * 1.6);
+    ctx.arc(30, 0, 13, Math.PI * 1.4, Math.PI * 0.6, true);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
