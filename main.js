@@ -28,13 +28,254 @@ const W = canvas.width;
 const H = canvas.height;
 const railY = 96;
 const groundY = H - 86;
-const minRopeLength = 104;
-const maxRopeLength = 176;
-const goalDistance = 2200;
+const minRopeLength = 56;
+const maxRopeLength = 320;
+let goalDistance = 2200;
 const cameraLead = 120;
 const visibleWorld = W - 148;
 const dangerAngle = 34;
 const warningAngle = 24;
+const stages = [
+  { name: "ステージ1", distance: 2200, obstacles: [], gates: [] },
+  {
+    name: "ステージ2",
+    distance: 2400,
+    obstacles: [
+      { x: 620, y: 244, w: 128, h: 46 },
+      { x: 1050, y: 394, w: 138, h: 48 },
+      { x: 1530, y: 258, w: 132, h: 50 },
+    ],
+    gates: [],
+  },
+  {
+    name: "ステージ3",
+    distance: 2500,
+    obstacles: [],
+    gates: [
+      { x: 720, w: 34, gapY: 355, gap: 142, phase: 0, speed: 1.8 },
+      { x: 1420, w: 34, gapY: 318, gap: 132, phase: 1.2, speed: 1.9 },
+    ],
+  },
+  {
+    name: "ステージ4",
+    distance: 2600,
+    obstacles: [
+      { x: 520, y: 228, w: 120, h: 42 },
+      { x: 960, y: 430, w: 130, h: 42 },
+      { x: 1510, y: 310, w: 160, h: 44 },
+    ],
+    gates: [{ x: 1970, w: 34, gapY: 345, gap: 140, phase: 0.8, speed: 1.7 }],
+  },
+  {
+    name: "ステージ5",
+    distance: 2700,
+    obstacles: [
+      { x: 460, y: 380, w: 150, h: 48 },
+      { x: 910, y: 248, w: 150, h: 48 },
+      { x: 1370, y: 392, w: 160, h: 48 },
+      { x: 1900, y: 262, w: 150, h: 48 },
+    ],
+    gates: [],
+  },
+  {
+    name: "ステージ6",
+    distance: 2800,
+    obstacles: [],
+    gates: [
+      { x: 560, w: 34, gapY: 330, gap: 132, phase: 0.2, speed: 2.2 },
+      { x: 1120, w: 34, gapY: 370, gap: 128, phase: 2.1, speed: 2.0 },
+      { x: 1810, w: 34, gapY: 315, gap: 128, phase: 1.1, speed: 2.3 },
+    ],
+  },
+  {
+    name: "ステージ7",
+    distance: 2900,
+    obstacles: [
+      { x: 520, y: 230, w: 180, h: 42 },
+      { x: 920, y: 310, w: 110, h: 180 },
+      { x: 1450, y: 250, w: 170, h: 44 },
+      { x: 2040, y: 404, w: 150, h: 46 },
+    ],
+    gates: [],
+  },
+  {
+    name: "ステージ8",
+    distance: 3000,
+    obstacles: [
+      { x: 650, y: 420, w: 150, h: 44 },
+      { x: 1730, y: 242, w: 150, h: 44 },
+    ],
+    gates: [
+      { x: 1040, w: 34, gapY: 332, gap: 136, phase: 0.5, speed: 2.2 },
+      { x: 2200, w: 34, gapY: 364, gap: 132, phase: 1.7, speed: 2.1 },
+    ],
+  },
+  {
+    name: "ステージ9",
+    distance: 3150,
+    obstacles: [
+      { x: 470, y: 270, w: 126, h: 48 },
+      { x: 780, y: 392, w: 126, h: 48 },
+      { x: 1090, y: 270, w: 126, h: 48 },
+      { x: 1400, y: 392, w: 126, h: 48 },
+      { x: 1710, y: 270, w: 126, h: 48 },
+    ],
+    gates: [],
+  },
+  {
+    name: "ステージ10",
+    distance: 3200,
+    obstacles: [{ x: 2050, y: 390, w: 180, h: 48 }],
+    gates: [
+      { x: 650, w: 36, gapY: 344, gap: 126, phase: 0, speed: 2.5 },
+      { x: 1240, w: 36, gapY: 328, gap: 122, phase: 1.6, speed: 2.4 },
+      { x: 1820, w: 36, gapY: 370, gap: 122, phase: 2.4, speed: 2.3 },
+    ],
+  },
+  {
+    name: "ステージ11",
+    distance: 3300,
+    obstacles: [
+      { x: 520, y: 420, w: 180, h: 48 },
+      { x: 920, y: 218, w: 150, h: 48 },
+      { x: 1320, y: 420, w: 180, h: 48 },
+      { x: 1780, y: 218, w: 150, h: 48 },
+      { x: 2320, y: 340, w: 170, h: 48 },
+    ],
+    gates: [],
+  },
+  {
+    name: "ステージ12",
+    distance: 3400,
+    obstacles: [
+      { x: 790, y: 262, w: 140, h: 42 },
+      { x: 1900, y: 420, w: 150, h: 44 },
+    ],
+    gates: [
+      { x: 520, w: 34, gapY: 355, gap: 132, phase: 0.3, speed: 2.6 },
+      { x: 1260, w: 34, gapY: 320, gap: 124, phase: 2.2, speed: 2.6 },
+      { x: 2500, w: 34, gapY: 350, gap: 124, phase: 1.2, speed: 2.5 },
+    ],
+  },
+  {
+    name: "ステージ13",
+    distance: 3500,
+    obstacles: [
+      { x: 530, y: 244, w: 130, h: 46 },
+      { x: 830, y: 390, w: 130, h: 46 },
+      { x: 1130, y: 244, w: 130, h: 46 },
+      { x: 1430, y: 390, w: 130, h: 46 },
+      { x: 1730, y: 244, w: 130, h: 46 },
+      { x: 2030, y: 390, w: 130, h: 46 },
+    ],
+    gates: [{ x: 2650, w: 34, gapY: 334, gap: 126, phase: 0.6, speed: 2.7 }],
+  },
+  {
+    name: "ステージ14",
+    distance: 3600,
+    obstacles: [
+      { x: 690, y: 300, w: 110, h: 160 },
+      { x: 1550, y: 210, w: 110, h: 160 },
+      { x: 2360, y: 348, w: 110, h: 160 },
+    ],
+    gates: [
+      { x: 1030, w: 36, gapY: 355, gap: 120, phase: 1.4, speed: 2.8 },
+      { x: 1980, w: 36, gapY: 320, gap: 120, phase: 2.7, speed: 2.8 },
+    ],
+  },
+  {
+    name: "ステージ15",
+    distance: 3700,
+    obstacles: [
+      { x: 500, y: 430, w: 150, h: 44 },
+      { x: 820, y: 238, w: 150, h: 44 },
+      { x: 1530, y: 430, w: 150, h: 44 },
+      { x: 1880, y: 238, w: 150, h: 44 },
+      { x: 2670, y: 332, w: 190, h: 44 },
+    ],
+    gates: [
+      { x: 1180, w: 34, gapY: 342, gap: 120, phase: 0.4, speed: 2.9 },
+      { x: 2250, w: 34, gapY: 356, gap: 120, phase: 2.0, speed: 3.0 },
+    ],
+  },
+  {
+    name: "ステージ16",
+    distance: 3800,
+    obstacles: [
+      { x: 620, y: 252, w: 170, h: 46 },
+      { x: 1260, y: 396, w: 170, h: 46 },
+      { x: 2480, y: 252, w: 170, h: 46 },
+    ],
+    gates: [
+      { x: 930, w: 36, gapY: 324, gap: 118, phase: 0.8, speed: 3.1 },
+      { x: 1740, w: 36, gapY: 376, gap: 118, phase: 2.3, speed: 3.1 },
+      { x: 3020, w: 36, gapY: 335, gap: 118, phase: 1.5, speed: 3.0 },
+    ],
+  },
+  {
+    name: "ステージ17",
+    distance: 3900,
+    obstacles: [
+      { x: 500, y: 250, w: 125, h: 44 },
+      { x: 770, y: 415, w: 125, h: 44 },
+      { x: 1040, y: 250, w: 125, h: 44 },
+      { x: 1310, y: 415, w: 125, h: 44 },
+      { x: 2070, y: 250, w: 125, h: 44 },
+      { x: 2340, y: 415, w: 125, h: 44 },
+      { x: 2610, y: 250, w: 125, h: 44 },
+    ],
+    gates: [{ x: 1690, w: 34, gapY: 342, gap: 118, phase: 2.1, speed: 3.2 }],
+  },
+  {
+    name: "ステージ18",
+    distance: 4000,
+    obstacles: [
+      { x: 700, y: 214, w: 150, h: 50 },
+      { x: 1500, y: 440, w: 160, h: 50 },
+      { x: 2860, y: 214, w: 150, h: 50 },
+    ],
+    gates: [
+      { x: 1020, w: 38, gapY: 336, gap: 112, phase: 0.2, speed: 3.3 },
+      { x: 2040, w: 38, gapY: 360, gap: 112, phase: 1.7, speed: 3.4 },
+      { x: 3300, w: 38, gapY: 330, gap: 112, phase: 2.8, speed: 3.3 },
+    ],
+  },
+  {
+    name: "ステージ19",
+    distance: 4100,
+    obstacles: [
+      { x: 540, y: 388, w: 150, h: 46 },
+      { x: 900, y: 236, w: 150, h: 46 },
+      { x: 1260, y: 388, w: 150, h: 46 },
+      { x: 2050, y: 236, w: 150, h: 46 },
+      { x: 2410, y: 388, w: 150, h: 46 },
+      { x: 2770, y: 236, w: 150, h: 46 },
+    ],
+    gates: [
+      { x: 1640, w: 38, gapY: 346, gap: 112, phase: 1.0, speed: 3.5 },
+      { x: 3210, w: 38, gapY: 346, gap: 112, phase: 2.4, speed: 3.5 },
+    ],
+  },
+  {
+    name: "ステージ20",
+    distance: 4300,
+    obstacles: [
+      { x: 560, y: 230, w: 150, h: 46 },
+      { x: 960, y: 420, w: 150, h: 46 },
+      { x: 1390, y: 230, w: 150, h: 46 },
+      { x: 2450, y: 420, w: 150, h: 46 },
+      { x: 2870, y: 230, w: 150, h: 46 },
+      { x: 3420, y: 340, w: 190, h: 46 },
+    ],
+    gates: [
+      { x: 1780, w: 40, gapY: 330, gap: 108, phase: 0.4, speed: 3.6 },
+      { x: 2180, w: 40, gapY: 370, gap: 108, phase: 2.0, speed: 3.6 },
+      { x: 3830, w: 40, gapY: 348, gap: 108, phase: 1.2, speed: 3.7 },
+    ],
+  },
+];
+let currentStageIndex = 0;
+let currentStage = stages[currentStageIndex];
 const tutorialScenes = [
   {
     title: "シーン 1",
@@ -82,6 +323,7 @@ let demoTime = 0;
 let demoInput = { x: 0, y: 0, label: "COAST" };
 
 function reset() {
+  goalDistance = currentStage.distance;
   state.distance = 0;
   state.speed = 0;
   state.accel = 0;
@@ -153,7 +395,7 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
   if (input.x === 0 && Math.abs(state.speed) < 2) state.speed = 0;
   state.distance = Math.max(0, Math.min(goalDistance, state.distance + state.speed * dt));
 
-  state.ropeLength = Math.max(minRopeLength, Math.min(maxRopeLength, state.ropeLength + input.y * 74 * dt));
+  state.ropeLength = Math.max(minRopeLength, Math.min(maxRopeLength, state.ropeLength + input.y * 88 * dt));
 
   const gravity = 9.8;
   const lengthMeters = state.ropeLength / 58;
@@ -169,17 +411,26 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
     state.result = "dropped";
     state.message = "Thrown off!";
     const load = loadPosition();
-    state.beamX = load.x;
-    state.beamY = load.y;
-    state.beamVx = state.speed * 1.5 + Math.sign(state.angle || 1) * 190;
-    state.beamVy = -260;
-    state.beamRotation = state.angle * 1.2;
-    state.beamSpin = Math.sign(state.angle || 1) * 5.2;
+    throwLoad(load.x, load.y);
+  } else if (hitStageHazard()) {
+    state.result = "dropped";
+    state.message = "Crash!";
+    const load = loadPosition();
+    throwLoad(load.x, load.y);
   } else if (state.distance >= goalDistance) {
     state.result = "cleared";
     state.message = "Goal!";
     state.distance = goalDistance;
   }
+}
+
+function throwLoad(x, y) {
+  state.beamX = x;
+  state.beamY = y;
+  state.beamVx = state.speed * 1.5 + Math.sign(state.angle || 1) * 190;
+  state.beamVy = -260;
+  state.beamRotation = state.angle * 1.2;
+  state.beamSpin = Math.sign(state.angle || 1) * 5.2;
 }
 
 function updateDemo(dt) {
@@ -225,10 +476,42 @@ function loadPosition() {
   return { x, y };
 }
 
+function loadWorldPosition() {
+  const x = state.distance + Math.sin(state.angle) * state.ropeLength;
+  const y = railY + 34 + Math.cos(state.angle) * state.ropeLength;
+  return { x, y };
+}
+
+function hitStageHazard() {
+  if (appScreen !== "game") return false;
+  const load = loadWorldPosition();
+  const radius = 42;
+  return currentStage.obstacles.some((obstacle) => circleHitsRect(load.x, load.y, radius, obstacle))
+    || currentStage.gates.some((gate) => circleHitsGate(load.x, load.y, radius, gate));
+}
+
+function circleHitsRect(cx, cy, radius, rect) {
+  const nearestX = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
+  const nearestY = Math.max(rect.y, Math.min(cy, rect.y + rect.h));
+  return (cx - nearestX) ** 2 + (cy - nearestY) ** 2 < radius ** 2;
+}
+
+function gateGapY(gate) {
+  return gate.gapY + Math.sin(performance.now() / 1000 * gate.speed + gate.phase) * 58;
+}
+
+function circleHitsGate(cx, cy, radius, gate) {
+  const gateRect = { x: gate.x, y: railY - 18, w: gate.w, h: groundY - railY + 18 };
+  if (!circleHitsRect(cx, cy, radius, gateRect)) return false;
+  const gapY = gateGapY(gate);
+  return cy - radius < gapY - gate.gap / 2 || cy + radius > gapY + gate.gap / 2;
+}
+
 function draw() {
   ctx.clearRect(0, 0, W, H);
   drawScene();
   drawTrack();
+  drawStageHazards();
   drawCrane();
   drawDemoCue();
   drawMeters();
@@ -366,6 +649,64 @@ function drawTrack() {
   ctx.textAlign = "center";
   ctx.fillText("GOAL", goalX, railY - 55);
   ctx.textAlign = "left";
+}
+
+function drawStageHazards() {
+  if (appScreen !== "game") return;
+  currentStage.obstacles.forEach(drawObstacle);
+  currentStage.gates.forEach(drawGate);
+}
+
+function drawObstacle(obstacle) {
+  const x = worldToScreen(obstacle.x);
+  if (x + obstacle.w < -40 || x > W + 40) return;
+
+  ctx.save();
+  ctx.fillStyle = "#52616d";
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 4;
+  ctx.fillRect(x, obstacle.y, obstacle.w, obstacle.h);
+  ctx.strokeRect(x, obstacle.y, obstacle.w, obstacle.h);
+
+  ctx.fillStyle = "#f0b429";
+  const stripeW = 18;
+  for (let sx = x - obstacle.h; sx < x + obstacle.w + obstacle.h; sx += stripeW * 2) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, obstacle.y, obstacle.w, obstacle.h);
+    ctx.clip();
+    ctx.translate(sx, obstacle.y);
+    ctx.rotate(-Math.PI / 4);
+    ctx.fillRect(0, -8, stripeW, obstacle.h * 3);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawGate(gate) {
+  const x = worldToScreen(gate.x);
+  if (x + gate.w < -40 || x > W + 40) return;
+  const gapY = gateGapY(gate);
+  const topY = railY - 18;
+  const topH = Math.max(0, gapY - gate.gap / 2 - topY);
+  const bottomY = gapY + gate.gap / 2;
+  const bottomH = groundY - bottomY;
+
+  ctx.save();
+  ctx.fillStyle = "#d64545";
+  ctx.strokeStyle = "#7f2532";
+  ctx.lineWidth = 4;
+  ctx.fillRect(x, topY, gate.w, topH);
+  ctx.strokeRect(x, topY, gate.w, topH);
+  ctx.fillRect(x, bottomY, gate.w, bottomH);
+  ctx.strokeRect(x, bottomY, gate.w, bottomH);
+
+  ctx.fillStyle = "rgb(255 255 255 / 0.86)";
+  ctx.font = "900 12px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("GATE", x + gate.w / 2, Math.max(topY + 22, gapY - gate.gap / 2 - 8));
+  ctx.textAlign = "left";
+  ctx.restore();
 }
 
 function drawCrane() {
@@ -580,7 +921,7 @@ function drawMeters() {
 
   ctx.fillStyle = "#17212b";
   ctx.font = "700 12px system-ui, sans-serif";
-  ctx.fillText(`Input: ${readInput().label}  Speed: ${Math.round(state.speed)}`, barX, barY - 48);
+  ctx.fillText(`${currentStage.name}  Input: ${readInput().label}  Speed: ${Math.round(state.speed)}`, barX, barY - 48);
   ctx.fillText("Swing limit", barX, barY - 7);
 }
 
@@ -593,8 +934,8 @@ function drawResult() {
   ctx.fillText(state.message, W / 2, H / 2 - 28);
   ctx.font = "700 18px system-ui, sans-serif";
   const detail = state.result === "cleared"
-    ? "Smooth crane work."
-    : "Too much swing.";
+    ? `${currentStage.name} cleared.`
+    : state.message === "Crash!" ? "Hit the obstacle." : "Too much swing.";
   ctx.fillText(detail, W / 2, H / 2 + 10);
   ctx.font = "600 14px system-ui, sans-serif";
   ctx.fillText("Tap Restart to try again", W / 2, H / 2 + 42);
@@ -661,7 +1002,11 @@ function showStageSelect() {
   setScreen("stage");
 }
 
-function startGame() {
+function startGame(stageNumber = currentStageIndex + 1) {
+  if (typeof stageNumber !== "number") stageNumber = currentStageIndex + 1;
+  currentStageIndex = Math.max(0, Math.min(stages.length - 1, stageNumber - 1));
+  currentStage = stages[currentStageIndex];
+  goalDistance = currentStage.distance;
   reset();
   setScreen("game");
 }
@@ -718,15 +1063,11 @@ function syncDemoCues() {
 
 function buildStageGrid() {
   stageGrid.innerHTML = "";
-  for (let i = 1; i <= 20; i += 1) {
+  for (let i = 1; i <= stages.length; i += 1) {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = `ステージ${i}`;
-    if (i === 1) {
-      button.addEventListener("click", startGame);
-    } else {
-      button.disabled = true;
-    }
+    button.textContent = stages[i - 1].name;
+    button.addEventListener("click", () => startGame(i));
     stageGrid.append(button);
   }
 }
