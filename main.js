@@ -30,7 +30,12 @@ const state = {
   last: performance.now(),
   keys: new Set(),
   buttons: new Set(),
-  fallY: 0,
+  beamX: 0,
+  beamY: 0,
+  beamVx: 0,
+  beamVy: 0,
+  beamRotation: 0,
+  beamSpin: 0,
 };
 
 function reset() {
@@ -43,7 +48,12 @@ function reset() {
   state.result = "running";
   state.message = "";
   state.last = performance.now();
-  state.fallY = 0;
+  state.beamX = 0;
+  state.beamY = 0;
+  state.beamVx = 0;
+  state.beamVy = 0;
+  state.beamRotation = 0;
+  state.beamSpin = 0;
   updateHud();
 }
 
@@ -75,7 +85,10 @@ function step(now) {
   if (state.result === "running") {
     updatePhysics(dt);
   } else if (state.result === "dropped") {
-    state.fallY = Math.min(groundY - 24, state.fallY + 620 * dt);
+    state.beamVy += 840 * dt;
+    state.beamX += state.beamVx * dt;
+    state.beamY += state.beamVy * dt;
+    state.beamRotation += state.beamSpin * dt;
   }
 
   draw();
@@ -104,8 +117,14 @@ function updatePhysics(dt) {
 
   if (Math.abs(toDeg(state.angle)) >= dangerAngle) {
     state.result = "dropped";
-    state.message = "Cat dropped!";
-    state.fallY = catPosition().y;
+    state.message = "Steel flew off!";
+    const load = loadPosition();
+    state.beamX = load.x;
+    state.beamY = load.y;
+    state.beamVx = state.speed * 1.5 + Math.sign(state.angle || 1) * 190;
+    state.beamVy = -260;
+    state.beamRotation = state.angle * 1.2;
+    state.beamSpin = Math.sign(state.angle || 1) * 5.2;
   } else if (state.distance >= goalDistance) {
     state.result = "cleared";
     state.message = "Goal!";
@@ -117,7 +136,7 @@ function craneX() {
   return 74 + (state.distance / goalDistance) * (W - 148);
 }
 
-function catPosition() {
+function loadPosition() {
   const x = craneX() + Math.sin(state.angle) * state.ropeLength;
   const y = railY + 34 + Math.cos(state.angle) * state.ropeLength;
   return { x, y };
@@ -174,30 +193,110 @@ function drawTrack() {
 function drawCrane() {
   const x = craneX();
   const hookY = railY + 34;
-  const cat = catPosition();
+  const load = loadPosition();
 
   ctx.fillStyle = "#ef5d43";
   ctx.fillRect(x - 31, railY - 36, 62, 32);
   ctx.fillStyle = "#25333f";
   ctx.fillRect(x - 20, railY - 7, 40, 16);
+  drawOperatorCat(x, railY - 52);
 
   ctx.strokeStyle = swingColor();
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(x, hookY);
-  ctx.lineTo(cat.x, state.result === "dropped" ? state.fallY : cat.y);
+  ctx.lineTo(load.x, load.y);
   ctx.stroke();
 
   if (state.result === "dropped") {
-    drawCat(cat.x, state.fallY, 24, "#f7a65a");
+    drawSteelBeam(state.beamX, state.beamY, state.beamRotation);
   } else {
-    drawCat(cat.x, cat.y, 24, "#f7a65a");
+    drawSteelBeam(load.x, load.y, state.angle * 0.55);
   }
 
   ctx.fillStyle = "#25333f";
   ctx.beginPath();
   ctx.arc(x, hookY, 7, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function drawOperatorCat(x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  ctx.fillStyle = "#f7a65a";
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-13, -10);
+  ctx.lineTo(-7, -27);
+  ctx.lineTo(-2, -11);
+  ctx.moveTo(13, -10);
+  ctx.lineTo(7, -27);
+  ctx.lineTo(2, -11);
+  ctx.fill();
+
+  ctx.fillStyle = "#f0b429";
+  ctx.beginPath();
+  ctx.arc(0, -6, 19, Math.PI, Math.PI * 2);
+  ctx.lineTo(19, -6);
+  ctx.lineTo(-19, -6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(-21, -7, 42, 6);
+
+  ctx.strokeStyle = "#9b6b00";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-9, -23);
+  ctx.lineTo(-9, -8);
+  ctx.moveTo(0, -25);
+  ctx.lineTo(0, -8);
+  ctx.moveTo(9, -23);
+  ctx.lineTo(9, -8);
+  ctx.stroke();
+
+  ctx.fillStyle = "#101820";
+  ctx.beginPath();
+  ctx.arc(-6, -1, 2.6, 0, Math.PI * 2);
+  ctx.arc(6, -1, 2.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#101820";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(0, 3);
+  ctx.lineTo(0, 8);
+  ctx.moveTo(-6, 8);
+  ctx.quadraticCurveTo(0, 13, 6, 8);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawSteelBeam(x, y, rotation) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+
+  ctx.fillStyle = "#6f7f89";
+  ctx.fillRect(-44, -9, 88, 18);
+  ctx.fillStyle = "#43525c";
+  ctx.fillRect(-49, -18, 98, 8);
+  ctx.fillRect(-49, 10, 98, 8);
+
+  ctx.strokeStyle = "rgb(255 255 255 / 0.46)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-38, -4);
+  ctx.lineTo(38, -4);
+  ctx.moveTo(-38, 4);
+  ctx.lineTo(38, 4);
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 function swingColor() {
@@ -234,37 +333,6 @@ function drawMeters() {
   ctx.fillText("Swing limit", barX, barY - 7);
 }
 
-function drawCat(x, y, r, color) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(x - r * 0.72, y - r * 0.55);
-  ctx.lineTo(x - r * 0.28, y - r * 1.12);
-  ctx.lineTo(x - r * 0.08, y - r * 0.42);
-  ctx.moveTo(x + r * 0.72, y - r * 0.55);
-  ctx.lineTo(x + r * 0.28, y - r * 1.12);
-  ctx.lineTo(x + r * 0.08, y - r * 0.42);
-  ctx.fill();
-
-  ctx.fillStyle = "#101820";
-  ctx.beginPath();
-  ctx.arc(x - r * 0.32, y - r * 0.12, 3.2, 0, Math.PI * 2);
-  ctx.arc(x + r * 0.32, y - r * 0.12, 3.2, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = "#101820";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x, y + 1);
-  ctx.lineTo(x, y + 8);
-  ctx.moveTo(x - 8, y + 9);
-  ctx.quadraticCurveTo(x, y + 15, x + 8, y + 9);
-  ctx.stroke();
-}
-
 function drawResult() {
   ctx.fillStyle = "rgb(23 33 43 / 0.76)";
   ctx.fillRect(0, 0, W, H);
@@ -274,7 +342,7 @@ function drawResult() {
   ctx.fillText(state.message, W / 2, H / 2 - 28);
   ctx.font = "700 18px system-ui, sans-serif";
   const detail = state.result === "cleared"
-    ? "Smooth notch work."
+    ? "Smooth crane work."
     : "Too much swing.";
   ctx.fillText(detail, W / 2, H / 2 + 10);
   ctx.font = "600 14px system-ui, sans-serif";

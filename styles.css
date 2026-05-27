@@ -94,7 +94,7 @@ button:active {
 #game {
   width: 100%;
   height: auto;
-  max-height: calc(100vh - 156px);
+  max-height: calc(100vh - 250px);
   align-self: center;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -104,13 +104,14 @@ button:active {
 
 .controls {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, 58px);
   grid-template-areas:
     ". up ."
     "left down right";
 }
 
 .controls button {
-  aspect-ratio: 1;
+  min-height: 58px;
   background: var(--ink);
   font-size: 1.8rem;
   line-height: 1;
