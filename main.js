@@ -90,7 +90,7 @@ const stages = [
     obstacles: [{ x: 1080, y: 246, w: 160, h: 48 }],
     gates: [{ x: 1760, w: 34, gapY: 352, gap: 142, phase: 0.7, speed: 2.0 }],
     machines: [
-      { kind: "forklift", startX: -180, y: 422, w: 220, h: 102, chaseGap: 220, speed: 210, maxX: 2920 },
+      { kind: "forklift", startX: -520, y: 150, w: 330, h: 388, speed: 92, maxX: 2920 },
     ],
   },
   {
@@ -522,10 +522,7 @@ function updateExcavator(machine, dt) {
 }
 
 function updateForklift(machine, dt) {
-  const targetX = Math.min(machine.maxX, state.distance - machine.chaseGap);
-  if (machine.x < targetX) {
-    machine.x = Math.min(targetX, machine.x + machine.speed * dt);
-  }
+  machine.x = Math.min(machine.maxX, machine.x + machine.speed * dt);
 }
 
 function updateDemo(dt) {
@@ -670,6 +667,9 @@ function adjustedObstacle(obstacle) {
 }
 
 function machineHitRect(machine) {
+  if (machine.kind === "excavator") {
+    return { x: machine.x - 54, y: machine.y, w: machine.w + 70, h: machine.h };
+  }
   return { x: machine.x, y: machine.y, w: machine.w, h: machine.h };
 }
 
@@ -997,40 +997,50 @@ function drawExcavator(machine) {
 function drawForklift(machine) {
   const x = worldToScreen(machine.x);
   if (x + machine.w < -80 || x > W + 80) return;
-  const y = machine.y;
+  const topY = machine.y;
+  const baseY = machine.y + machine.h;
+  const bodyY = baseY - 112;
+  const cabinY = bodyY - 74;
+  const mastX = x + machine.w - 76;
 
   ctx.save();
+  ctx.fillStyle = "rgb(239 93 67 / 0.14)";
+  ctx.fillRect(x, topY, machine.w, machine.h);
+
   ctx.fillStyle = "#ef5d43";
   ctx.strokeStyle = "#25333f";
   ctx.lineWidth = 4;
-  ctx.fillRect(x + 34, y + 32, 94, 48);
-  ctx.strokeRect(x + 34, y + 32, 94, 48);
+  ctx.fillRect(x + 52, bodyY, 158, 70);
+  ctx.strokeRect(x + 52, bodyY, 158, 70);
   ctx.fillStyle = "#f0b429";
-  ctx.fillRect(x + 92, y + 6, 44, 46);
-  ctx.strokeRect(x + 92, y + 6, 44, 46);
+  ctx.fillRect(x + 126, cabinY, 82, 78);
+  ctx.strokeRect(x + 126, cabinY, 82, 78);
   ctx.fillStyle = "rgb(255 255 255 / 0.6)";
-  ctx.fillRect(x + 104, y + 16, 20, 18);
+  ctx.fillRect(x + 146, cabinY + 16, 34, 28);
 
   ctx.strokeStyle = "#25333f";
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 9;
   ctx.beginPath();
-  ctx.moveTo(x + 148, y + 12);
-  ctx.lineTo(x + 148, y + 86);
-  ctx.moveTo(x + 148, y + 80);
-  ctx.lineTo(x + 196, y + 80);
-  ctx.moveTo(x + 148, y + 62);
-  ctx.lineTo(x + 190, y + 62);
+  ctx.moveTo(mastX, topY + 28);
+  ctx.lineTo(mastX, baseY - 26);
+  ctx.moveTo(mastX + 34, topY + 44);
+  ctx.lineTo(mastX + 34, baseY - 20);
+  ctx.moveTo(mastX, bodyY + 52);
+  ctx.lineTo(x + machine.w + 54, bodyY + 52);
+  ctx.moveTo(mastX, bodyY + 78);
+  ctx.lineTo(x + machine.w + 70, bodyY + 78);
   ctx.stroke();
 
   ctx.fillStyle = "#17212b";
+  ctx.fillRect(x + 42, baseY - 34, 206, 30);
   ctx.beginPath();
-  ctx.arc(x + 58, y + 88, 16, 0, Math.PI * 2);
-  ctx.arc(x + 118, y + 88, 16, 0, Math.PI * 2);
+  ctx.arc(x + 82, baseY - 2, 25, 0, Math.PI * 2);
+  ctx.arc(x + 202, baseY - 2, 25, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#fff";
-  ctx.font = "900 13px system-ui, sans-serif";
+  ctx.font = "900 18px system-ui, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("CHASE", x + 80, y + 64);
+  ctx.fillText("CHASE", x + 132, bodyY + 46);
   ctx.textAlign = "left";
   ctx.restore();
 }
