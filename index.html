@@ -15,7 +15,7 @@
         </div>
         <div>
           <p class="label">Swing</p>
-          <p><span id="swing">0</span>°</p>
+          <p><span id="swing">0</span>&deg;</p>
         </div>
         <button id="restart" type="button">Restart</button>
       </section>
@@ -23,9 +23,10 @@
       <canvas id="game" width="390" height="680" aria-label="cat crane play field"></canvas>
 
       <section class="controls" aria-label="game controls">
-        <button id="brake" type="button" aria-label="apply brake">Brake</button>
-        <button id="notch" type="button" aria-label="apply acceleration notch">Notch</button>
-        <button id="coast" type="button" aria-label="coast without power">Coast</button>
+        <button id="up" class="dir-up" type="button" aria-label="move crane up">&uarr;</button>
+        <button id="left" class="dir-left" type="button" aria-label="move crane left">&larr;</button>
+        <button id="down" class="dir-down" type="button" aria-label="move crane down">&darr;</button>
+        <button id="right" class="dir-right" type="button" aria-label="move crane right">&rarr;</button>
       </section>
     </main>
 

@@ -3,15 +3,17 @@ const ctx = canvas.getContext("2d");
 const distanceEl = document.querySelector("#distance");
 const swingEl = document.querySelector("#swing");
 const restartBtn = document.querySelector("#restart");
-const brakeBtn = document.querySelector("#brake");
-const notchBtn = document.querySelector("#notch");
-const coastBtn = document.querySelector("#coast");
+const leftBtn = document.querySelector("#left");
+const rightBtn = document.querySelector("#right");
+const upBtn = document.querySelector("#up");
+const downBtn = document.querySelector("#down");
 
 const W = canvas.width;
 const H = canvas.height;
 const railY = 96;
 const groundY = H - 86;
-const ropeLength = 142;
+const minRopeLength = 104;
+const maxRopeLength = 176;
 const goalDistance = 520;
 const dangerAngle = 34;
 const warningAngle = 24;
@@ -20,13 +22,14 @@ const state = {
   distance: 0,
   speed: 0,
   accel: 0,
+  ropeLength: 142,
   angle: 0,
   angularVelocity: 0,
-  mode: "coast",
   result: "running",
   message: "",
   last: performance.now(),
   keys: new Set(),
+  buttons: new Set(),
   fallY: 0,
 };
 
@@ -34,9 +37,9 @@ function reset() {
   state.distance = 0;
   state.speed = 0;
   state.accel = 0;
+  state.ropeLength = 142;
   state.angle = 0.08;
   state.angularVelocity = 0;
-  state.mode = "coast";
   state.result = "running";
   state.message = "";
   state.last = performance.now();
@@ -53,17 +56,16 @@ function toDeg(rad) {
   return rad * 180 / Math.PI;
 }
 
-function setMode(mode) {
-  if (state.result !== "running") return;
-  state.mode = mode;
-}
-
-function readInputMode() {
-  if (state.keys.has(" ") || state.keys.has("ArrowRight") || state.keys.has("d")) return "notch";
-  if (state.keys.has("ArrowDown") || state.keys.has("s")) return "brake";
-  if (state.mode === "notch-hold") return "notch";
-  if (state.mode === "brake-hold") return "brake";
-  return state.mode;
+function readInput() {
+  const right = state.keys.has("ArrowRight") || state.keys.has("d") || state.buttons.has("right");
+  const left = state.keys.has("ArrowLeft") || state.keys.has("a") || state.buttons.has("left");
+  const up = state.keys.has("ArrowUp") || state.keys.has("w") || state.buttons.has("up");
+  const down = state.keys.has("ArrowDown") || state.keys.has("s") || state.buttons.has("down");
+  return {
+    x: Number(right) - Number(left),
+    y: Number(down) - Number(up),
+    label: right ? "RIGHT" : left ? "LEFT" : up ? "UP" : down ? "DOWN" : "COAST",
+  };
 }
 
 function step(now) {
@@ -82,15 +84,18 @@ function step(now) {
 }
 
 function updatePhysics(dt) {
-  const input = readInputMode();
-  const targetAccel = input === "notch" ? 70 : input === "brake" ? -110 : -16;
+  const input = readInput();
+  const targetAccel = input.x !== 0 ? input.x * 88 : state.speed === 0 ? 0 : -Math.sign(state.speed) * 22;
   state.accel += (targetAccel - state.accel) * Math.min(1, dt * 9);
 
-  state.speed = Math.max(0, Math.min(132, state.speed + state.accel * dt));
-  state.distance += state.speed * dt;
+  state.speed = Math.max(-58, Math.min(132, state.speed + state.accel * dt));
+  if (input.x === 0 && Math.abs(state.speed) < 2) state.speed = 0;
+  state.distance = Math.max(0, Math.min(goalDistance, state.distance + state.speed * dt));
+
+  state.ropeLength = Math.max(minRopeLength, Math.min(maxRopeLength, state.ropeLength + input.y * 74 * dt));
 
   const gravity = 9.8;
-  const lengthMeters = 2.4;
+  const lengthMeters = state.ropeLength / 58;
   const trolleyAccel = state.accel / 20;
   const pendulumForce = -(gravity / lengthMeters) * Math.sin(state.angle) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
   state.angularVelocity += pendulumForce * dt;
@@ -113,8 +118,8 @@ function craneX() {
 }
 
 function catPosition() {
-  const x = craneX() + Math.sin(state.angle) * ropeLength;
-  const y = railY + 34 + Math.cos(state.angle) * ropeLength;
+  const x = craneX() + Math.sin(state.angle) * state.ropeLength;
+  const y = railY + 34 + Math.cos(state.angle) * state.ropeLength;
   return { x, y };
 }
 
@@ -225,7 +230,7 @@ function drawMeters() {
 
   ctx.fillStyle = "#17212b";
   ctx.font = "700 12px system-ui, sans-serif";
-  ctx.fillText(`Mode: ${readInputMode().toUpperCase()}  Speed: ${Math.round(state.speed)}`, barX, barY - 48);
+  ctx.fillText(`Input: ${readInput().label}  Speed: ${Math.round(state.speed)}`, barX, barY - 48);
   ctx.fillText("Swing limit", barX, barY - 7);
 }
 
@@ -277,21 +282,29 @@ function drawResult() {
   ctx.textAlign = "left";
 }
 
-function bindHold(button, mode) {
-  button.addEventListener("pointerdown", () => setMode(`${mode}-hold`));
-  button.addEventListener("pointerup", () => setMode("coast"));
-  button.addEventListener("pointerleave", () => setMode("coast"));
-  button.addEventListener("pointercancel", () => setMode("coast"));
-  button.addEventListener("click", () => setMode(mode));
+function bindDirection(button, direction) {
+  const start = (event) => {
+    event.preventDefault();
+    if (state.result === "running") state.buttons.add(direction);
+  };
+  const stop = () => {
+    state.buttons.delete(direction);
+  };
+  button.addEventListener("pointerdown", start);
+  button.addEventListener("pointerup", stop);
+  button.addEventListener("pointerleave", stop);
+  button.addEventListener("pointercancel", stop);
+  button.addEventListener("lostpointercapture", stop);
 }
 
-bindHold(notchBtn, "notch");
-bindHold(brakeBtn, "brake");
-coastBtn.addEventListener("click", () => setMode("coast"));
+bindDirection(leftBtn, "left");
+bindDirection(rightBtn, "right");
+bindDirection(upBtn, "up");
+bindDirection(downBtn, "down");
 restartBtn.addEventListener("click", reset);
 
 window.addEventListener("keydown", (event) => {
-  if ([" ", "ArrowRight", "ArrowDown"].includes(event.key)) event.preventDefault();
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(event.key)) event.preventDefault();
   state.keys.add(event.key);
 });
 window.addEventListener("keyup", (event) => state.keys.delete(event.key));

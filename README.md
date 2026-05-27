@@ -6,14 +6,14 @@ A small mobile-first browser game about smooth crane operation. Carry the cat to
 
 Open `index.html` in a browser, or publish the repository with GitHub Pages.
 
-The crane starts with a cat already hanging from the hook. Use short acceleration notches, coast, and brake timing to keep the load steady while moving right. If the swing angle becomes too large, the cat falls and the run is over.
+The crane starts with a cat already hanging from the hook. Press a direction only while you want the crane to move that way, then release to coast. Keep the load steady while moving right toward the goal. If the swing angle becomes too large, the cat falls and the run is over.
 
 Controls:
 
-- Notch: accelerate the crane to the right.
-- Coast: stop powering and let the crane settle.
-- Brake: slow the crane down.
-- Keyboard: `Space`, `ArrowRight`, or `D` for Notch. `ArrowDown` or `S` for Brake.
+- Right / Left: accelerate the trolley horizontally.
+- Up / Down: raise or lower the hanging cat.
+- Releasing every direction coasts.
+- Keyboard: arrow keys or `W`, `A`, `S`, `D`.
 
 ## Files
 
