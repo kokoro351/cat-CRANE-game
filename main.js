@@ -496,19 +496,33 @@ function updateDemo(dt) {
 
 function updateStageClearDemo(dt) {
   demoTime += dt;
-  const targetSpeed = 118;
-  state.speed = targetSpeed;
-  state.accel = 0;
-  state.distance = Math.min(goalDistance, state.distance + targetSpeed * dt);
-  state.angle = Math.sin(demoTime * 2.2) * 0.018;
-  state.angularVelocity = 0;
-  const targetRope = demoRopeTarget(state.distance);
-  state.ropeLength += (targetRope - state.ropeLength) * Math.min(1, dt * 3.4);
-  demoInput = { x: state.distance >= goalDistance ? 0 : 1, y: 0, label: "DEMO" };
+  const targetRope = demoRopeTarget(state.distance + 165);
+  const ropeError = targetRope - state.ropeLength;
+  const y = ropeError > 28 ? 1 : ropeError < -28 ? -1 : 0;
+  const notchPhase = demoTime % 4.8;
+  const x = state.distance >= goalDistance ? 0 : state.speed < 46 || notchPhase < 4.0 ? 1 : 0;
+  const label = y < 0 ? "UP" : y > 0 ? "DOWN" : x > 0 ? "RIGHT" : "COAST";
 
-  if (state.distance >= goalDistance && demoTime > goalDistance / targetSpeed + 1.1) {
+  demoInput = { x, y, label };
+  demoLabel.textContent = stageDemoInstruction(label);
+  updatePhysics(dt, demoInput, false);
+  state.angle *= Math.max(0, 1 - dt * 2.8);
+  state.angularVelocity *= Math.max(0, 1 - dt * 4.2);
+
+  if (state.distance >= goalDistance && demoTime > 1.1) {
+    state.distance = goalDistance;
+    state.speed = 0;
+    demoInput = { x: 0, y: 0, label: "COAST" };
     showStageSelect();
   }
+}
+
+function stageDemoInstruction(label) {
+  const prefix = `見本プレイ: ${currentStage.name}`;
+  if (label === "UP") return `${prefix}  ↑で巻き上げて避ける`;
+  if (label === "DOWN") return `${prefix}  ↓で下げて通過高さへ`;
+  if (label === "RIGHT") return `${prefix}  →を押して進む`;
+  return `${prefix}  離して揺れを抑える`;
 }
 
 function demoRopeTarget(distance) {
@@ -1131,8 +1145,8 @@ function startGame(stageNumber = currentStageIndex + 1) {
 function startStageClearDemo() {
   reset();
   demoTime = 0;
-  demoInput = { x: 1, y: 0, label: "DEMO" };
-  demoLabel.textContent = `見本プレイ: ${currentStage.name} クリア例`;
+  demoInput = { x: 0, y: 0, label: "COAST" };
+  demoLabel.textContent = `見本プレイ: ${currentStage.name} 右・上・下の操作タイミング`;
   setScreen("stageDemo");
 }
 
@@ -1221,12 +1235,16 @@ function unlockAllStages() {
 }
 
 function bindMenuAction(button, action) {
+  let lastRun = 0;
   const run = (event) => {
     event.preventDefault();
+    const now = performance.now();
+    if (now - lastRun < 250) return;
+    lastRun = now;
     action();
   };
+  button.addEventListener("pointerdown", run);
   button.addEventListener("click", run);
-  button.addEventListener("pointerup", run);
 }
 
 function bindDirection(button, direction) {
