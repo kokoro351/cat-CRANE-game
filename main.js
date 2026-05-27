@@ -7,6 +7,8 @@ const leftBtn = document.querySelector("#left");
 const rightBtn = document.querySelector("#right");
 const upBtn = document.querySelector("#up");
 const downBtn = document.querySelector("#down");
+const beamCatSprite = new Image();
+beamCatSprite.src = "assets/cat-beam-anime.png";
 
 const W = canvas.width;
 const H = canvas.height;
@@ -340,6 +342,16 @@ function drawSteelBeam(x, y, rotation) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
+
+  if (beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
+    const width = 112;
+    const scale = width / beamCatSprite.naturalWidth;
+    const height = beamCatSprite.naturalHeight * scale;
+    const beamCenterY = 472 * scale;
+    ctx.drawImage(beamCatSprite, -width / 2, -beamCenterY, width, height);
+    ctx.restore();
+    return;
+  }
 
   ctx.fillStyle = "#6f7f89";
   ctx.fillRect(-44, -9, 88, 18);
