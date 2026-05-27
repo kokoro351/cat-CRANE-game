@@ -140,6 +140,7 @@ function step(now) {
 
   draw();
   updateHud();
+  syncButtonStates();
   requestAnimationFrame(step);
 }
 
@@ -182,9 +183,9 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
 
 function updateDemo(dt) {
   demoTime += dt;
-  const phase = demoTime % 3.2;
-  if (phase < 0.7 || (phase > 1.45 && phase < 2.05)) {
-    demoInput = { x: 1, y: 0, label: "RIGHT" };
+  const phase = demoTime % 3.8;
+  if ((phase > 0.45 && phase < 1.35) || (phase > 2.05 && phase < 2.95)) {
+    demoInput = { x: -0.55, y: 0, label: "LEFT" };
   } else {
     demoInput = { x: 0, y: 0, label: "COAST" };
   }
@@ -632,9 +633,22 @@ function renderStory() {
 
 function startDemo() {
   reset();
+  state.distance = 520;
+  state.speed = 54;
+  state.accel = 0;
+  state.angle = 0.07;
+  state.angularVelocity = -0.1;
   demoTime = 0;
   demoInput = { x: 0, y: 0, label: "COAST" };
   setScreen("demo");
+}
+
+function syncButtonStates() {
+  const input = readInput();
+  leftBtn.classList.toggle("is-pressed", input.x < 0);
+  rightBtn.classList.toggle("is-pressed", input.x > 0);
+  upBtn.classList.toggle("is-pressed", input.y < 0);
+  downBtn.classList.toggle("is-pressed", input.y > 0);
 }
 
 function buildStageGrid() {
