@@ -49,6 +49,10 @@ const warningAngle = 24;
 const freeStageCount = 4;
 const stageUnlockKey = "catCrane.allStagesUnlocked";
 const clearedStagesKey = "catCrane.clearedStages";
+const beamSpriteWidth = 96;
+const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
+const obstacleHeightScale = 0.72;
+const gateGapBonus = 78;
 const stages = [
   { name: "ステージ1", distance: 2200, obstacles: [], gates: [] },
   {
@@ -517,27 +521,56 @@ function loadWorldPosition() {
 
 function hitStageHazard() {
   if (appScreen !== "game") return false;
-  const load = loadWorldPosition();
-  const radius = 42;
-  return currentStage.obstacles.some((obstacle) => circleHitsRect(load.x, load.y, radius, obstacle))
-    || currentStage.gates.some((gate) => circleHitsGate(load.x, load.y, radius, gate));
+  const points = loadHitboxPoints(loadWorldPosition(), state.angle * 0.55);
+  return currentStage.obstacles.some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
+    || currentStage.gates.some((gate) => points.some((point) => pointHitsGate(point, gate)));
 }
 
-function circleHitsRect(cx, cy, radius, rect) {
-  const nearestX = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
-  const nearestY = Math.max(rect.y, Math.min(cy, rect.y + rect.h));
-  return (cx - nearestX) ** 2 + (cy - nearestY) ** 2 < radius ** 2;
+function loadHitboxPoints(origin, rotation) {
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  const xs = [loadHitbox.left, (loadHitbox.left + loadHitbox.right) / 2, loadHitbox.right];
+  const ys = [loadHitbox.top, loadHitbox.top + 34, loadHitbox.top + 76, loadHitbox.bottom];
+  const points = [];
+  xs.forEach((localX) => {
+    ys.forEach((localY) => {
+      points.push({
+        x: origin.x + localX * cos - localY * sin,
+        y: origin.y + localX * sin + localY * cos,
+      });
+    });
+  });
+  return points;
+}
+
+function adjustedObstacle(obstacle) {
+  const h = Math.max(28, obstacle.h * obstacleHeightScale);
+  return {
+    x: obstacle.x,
+    y: obstacle.y + (obstacle.h - h) / 2,
+    w: obstacle.w,
+    h,
+  };
+}
+
+function pointInRect(point, rect) {
+  return point.x >= rect.x && point.x <= rect.x + rect.w
+    && point.y >= rect.y && point.y <= rect.y + rect.h;
 }
 
 function gateGapY(gate) {
   return gate.gapY + Math.sin(performance.now() / 1000 * gate.speed + gate.phase) * 58;
 }
 
-function circleHitsGate(cx, cy, radius, gate) {
-  const gateRect = { x: gate.x, y: railY - 18, w: gate.w, h: groundY - railY + 18 };
-  if (!circleHitsRect(cx, cy, radius, gateRect)) return false;
+function gateClearance(gate) {
+  return gate.gap + gateGapBonus;
+}
+
+function pointHitsGate(point, gate) {
+  if (point.x < gate.x || point.x > gate.x + gate.w) return false;
   const gapY = gateGapY(gate);
-  return cy - radius < gapY - gate.gap / 2 || cy + radius > gapY + gate.gap / 2;
+  const gap = gateClearance(gate);
+  return point.y < gapY - gap / 2 || point.y > gapY + gap / 2;
 }
 
 function draw() {
@@ -691,26 +724,27 @@ function drawStageHazards() {
 }
 
 function drawObstacle(obstacle) {
-  const x = worldToScreen(obstacle.x);
-  if (x + obstacle.w < -40 || x > W + 40) return;
+  const adjusted = adjustedObstacle(obstacle);
+  const x = worldToScreen(adjusted.x);
+  if (x + adjusted.w < -40 || x > W + 40) return;
 
   ctx.save();
   ctx.fillStyle = "#52616d";
   ctx.strokeStyle = "#25333f";
   ctx.lineWidth = 4;
-  ctx.fillRect(x, obstacle.y, obstacle.w, obstacle.h);
-  ctx.strokeRect(x, obstacle.y, obstacle.w, obstacle.h);
+  ctx.fillRect(x, adjusted.y, adjusted.w, adjusted.h);
+  ctx.strokeRect(x, adjusted.y, adjusted.w, adjusted.h);
 
   ctx.fillStyle = "#f0b429";
   const stripeW = 18;
-  for (let sx = x - obstacle.h; sx < x + obstacle.w + obstacle.h; sx += stripeW * 2) {
+  for (let sx = x - adjusted.h; sx < x + adjusted.w + adjusted.h; sx += stripeW * 2) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(x, obstacle.y, obstacle.w, obstacle.h);
+    ctx.rect(x, adjusted.y, adjusted.w, adjusted.h);
     ctx.clip();
-    ctx.translate(sx, obstacle.y);
+    ctx.translate(sx, adjusted.y);
     ctx.rotate(-Math.PI / 4);
-    ctx.fillRect(0, -8, stripeW, obstacle.h * 3);
+    ctx.fillRect(0, -8, stripeW, adjusted.h * 3);
     ctx.restore();
   }
   ctx.restore();
@@ -720,9 +754,10 @@ function drawGate(gate) {
   const x = worldToScreen(gate.x);
   if (x + gate.w < -40 || x > W + 40) return;
   const gapY = gateGapY(gate);
+  const gap = gateClearance(gate);
   const topY = railY - 18;
-  const topH = Math.max(0, gapY - gate.gap / 2 - topY);
-  const bottomY = gapY + gate.gap / 2;
+  const topH = Math.max(0, gapY - gap / 2 - topY);
+  const bottomY = gapY + gap / 2;
   const bottomH = groundY - bottomY;
 
   ctx.save();
@@ -737,7 +772,7 @@ function drawGate(gate) {
   ctx.fillStyle = "rgb(255 255 255 / 0.86)";
   ctx.font = "900 12px system-ui, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("GATE", x + gate.w / 2, Math.max(topY + 22, gapY - gate.gap / 2 - 8));
+  ctx.fillText("GATE", x + gate.w / 2, Math.max(topY + 22, gapY - gap / 2 - 8));
   ctx.textAlign = "left";
   ctx.restore();
 }
@@ -894,7 +929,7 @@ function drawSteelBeam(x, y, rotation) {
   ctx.rotate(rotation);
 
   if (beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
-    const width = 112;
+    const width = beamSpriteWidth;
     const scale = width / beamCatSprite.naturalWidth;
     const height = beamCatSprite.naturalHeight * scale;
     const hookAnchorX = 166 * scale;
