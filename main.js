@@ -10,11 +10,16 @@ const downBtn = document.querySelector("#down");
 const shell = document.querySelector(".game-shell");
 const startScreen = document.querySelector("#start-screen");
 const stageScreen = document.querySelector("#stage-screen");
+const purchaseScreen = document.querySelector("#purchase-screen");
 const tutorialScreen = document.querySelector("#tutorial-screen");
 const tutorialButton = document.querySelector("#tutorial-button");
 const stageButton = document.querySelector("#stage-button");
 const stageBackButton = document.querySelector("#stage-back");
 const stageGrid = document.querySelector("#stage-grid");
+const unlockStatus = document.querySelector("#unlock-status");
+const unlockButton = document.querySelector("#unlock-button");
+const restoreButton = document.querySelector("#restore-button");
+const purchaseCloseButton = document.querySelector("#purchase-close");
 const storyTitle = document.querySelector("#story-title");
 const storyText = document.querySelector("#story-text");
 const storyVisual = document.querySelector("#story-visual");
@@ -35,6 +40,8 @@ const cameraLead = 120;
 const visibleWorld = W - 148;
 const dangerAngle = 34;
 const warningAngle = 24;
+const freeStageCount = 4;
+const stageUnlockKey = "catCrane.allStagesUnlocked";
 const stages = [
   { name: "ステージ1", distance: 2200, obstacles: [], gates: [] },
   {
@@ -276,6 +283,7 @@ const stages = [
 ];
 let currentStageIndex = 0;
 let currentStage = stages[currentStageIndex];
+let allStagesUnlocked = localStorage.getItem(stageUnlockKey) === "true";
 const tutorialScenes = [
   {
     title: "シーン 1",
@@ -399,7 +407,7 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
 
   const gravity = 9.8;
   const lengthMeters = state.ropeLength / 58;
-  const trolleyAccel = state.accel / 20;
+  const trolleyAccel = state.accel / 26;
   const pendulumForce = -(gravity / lengthMeters) * Math.sin(state.angle) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
   state.angularVelocity += pendulumForce * dt;
   state.angularVelocity *= 0.998;
@@ -983,9 +991,10 @@ function setScreen(nextScreen) {
   appScreen = nextScreen;
   startScreen.classList.toggle("hidden", nextScreen !== "start");
   stageScreen.classList.toggle("hidden", nextScreen !== "stage");
+  purchaseScreen.classList.toggle("hidden", nextScreen !== "purchase");
   tutorialScreen.classList.toggle("hidden", nextScreen !== "tutorial");
   demoLabel.classList.toggle("hidden", nextScreen !== "demo");
-  shell.classList.toggle("menu-mode", ["start", "stage", "tutorial"].includes(nextScreen));
+  shell.classList.toggle("menu-mode", ["start", "stage", "purchase", "tutorial"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
   shell.classList.toggle("play-mode", nextScreen === "game");
   if (nextScreen !== "demo") {
@@ -999,7 +1008,12 @@ function showTitle() {
 }
 
 function showStageSelect() {
+  buildStageGrid();
   setScreen("stage");
+}
+
+function showPurchase() {
+  setScreen("purchase");
 }
 
 function startGame(stageNumber = currentStageIndex + 1) {
@@ -1063,13 +1077,33 @@ function syncDemoCues() {
 
 function buildStageGrid() {
   stageGrid.innerHTML = "";
+  unlockStatus.textContent = allStagesUnlocked
+    ? "全ステージ解放済み"
+    : `ステージ1〜${freeStageCount}は無料 / ステージ${freeStageCount + 1}〜20は全解放購入`;
   for (let i = 1; i <= stages.length; i += 1) {
+    const locked = i > freeStageCount && !allStagesUnlocked;
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = stages[i - 1].name;
-    button.addEventListener("click", () => startGame(i));
+    button.classList.toggle("locked-stage", locked);
+    button.innerHTML = locked
+      ? `<span>${stages[i - 1].name}</span><small>LOCK</small>`
+      : `<span>${stages[i - 1].name}</span>`;
+    button.addEventListener("click", () => {
+      if (locked) {
+        showPurchase();
+      } else {
+        startGame(i);
+      }
+    });
     stageGrid.append(button);
   }
+}
+
+function unlockAllStages() {
+  allStagesUnlocked = true;
+  localStorage.setItem(stageUnlockKey, "true");
+  buildStageGrid();
+  showStageSelect();
 }
 
 function bindDirection(button, direction) {
@@ -1095,6 +1129,9 @@ restartBtn.addEventListener("click", startGame);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
 stageBackButton.addEventListener("click", showTitle);
+unlockButton.addEventListener("click", unlockAllStages);
+restoreButton.addEventListener("click", unlockAllStages);
+purchaseCloseButton.addEventListener("click", showStageSelect);
 storyNextButton.addEventListener("click", () => {
   storyIndex += 1;
   if (storyIndex >= tutorialScenes.length) {

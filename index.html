@@ -34,8 +34,20 @@
 
         <div id="stage-screen" class="screen hidden">
           <h2>ステージ選択</h2>
+          <p id="unlock-status" class="unlock-status"></p>
           <div id="stage-grid" class="stage-grid" aria-label="stage list"></div>
           <button id="stage-back" class="secondary" type="button">タイトルへ</button>
+        </div>
+
+        <div id="purchase-screen" class="screen purchase-screen hidden">
+          <div class="purchase-card">
+            <h2>全ステージ解放</h2>
+            <p>ステージ5〜20をまとめて解放します。</p>
+            <strong>480円</strong>
+            <button id="unlock-button" type="button">購入して解放</button>
+            <button id="restore-button" class="secondary" type="button">購入を復元</button>
+            <button id="purchase-close" class="secondary" type="button">戻る</button>
+          </div>
         </div>
 
         <div id="tutorial-screen" class="screen hidden">

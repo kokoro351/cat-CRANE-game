@@ -195,14 +195,62 @@ button:active {
 }
 
 .stage-grid button {
+  display: grid;
+  place-items: center;
+  gap: 2px;
   min-height: 54px;
   padding: 0;
 }
 
-.stage-grid button[disabled] {
+.stage-grid button[disabled],
+.stage-grid button.locked-stage {
   background: #a9b5bd;
   color: #eef5f8;
-  cursor: not-allowed;
+}
+
+.stage-grid button.locked-stage {
+  background: #52616d;
+}
+
+.stage-grid button small {
+  font-size: 0.64rem;
+  letter-spacing: 0;
+  opacity: 0.86;
+}
+
+.unlock-status {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.purchase-screen {
+  align-content: center;
+}
+
+.purchase-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 12px 26px rgb(23 33 43 / 14%);
+}
+
+.purchase-card p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+.purchase-card strong {
+  color: var(--accent-dark);
+  font-size: 2rem;
+  text-align: center;
 }
 
 .story-card {
