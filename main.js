@@ -27,6 +27,11 @@ const storyVisual = document.querySelector("#story-visual");
 const storyNextButton = document.querySelector("#story-next");
 const demoLabel = document.querySelector("#demo-label");
 const buttonCue = document.querySelector("#button-cue");
+const resultPanel = document.querySelector("#result-panel");
+const resultTitle = document.querySelector("#result-title");
+const resultText = document.querySelector("#result-text");
+const resultRestartBtn = document.querySelector("#result-restart");
+const resultStageBtn = document.querySelector("#result-stage");
 const beamCatSprite = new Image();
 beamCatSprite.src = "assets/cat-beam-anime.png";
 
@@ -385,7 +390,7 @@ function step(now) {
     updateDemo(dt);
   } else if (appScreen === "game" && state.result === "running") {
     updatePhysics(dt);
-  } else if (state.result === "dropped") {
+  } else if (appScreen === "game" && state.result === "dropped") {
     state.beamVy += 840 * dt;
     state.beamX += state.beamVx * dt;
     state.beamY += state.beamVy * dt;
@@ -394,6 +399,7 @@ function step(now) {
 
   draw();
   updateHud();
+  syncResultPanel();
   syncButtonStates();
   requestAnimationFrame(step);
 }
@@ -542,7 +548,7 @@ function draw() {
   drawCrane();
   drawDemoCue();
   drawMeters();
-  if (state.result !== "running") drawResult();
+  if (appScreen === "game" && state.result !== "running") drawResult();
 }
 
 function drawScene() {
@@ -955,18 +961,19 @@ function drawMeters() {
 function drawResult() {
   ctx.fillStyle = "rgb(23 33 43 / 0.76)";
   ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#fff";
-  ctx.textAlign = "center";
-  ctx.font = "800 40px system-ui, sans-serif";
-  ctx.fillText(state.message, W / 2, H / 2 - 28);
-  ctx.font = "700 18px system-ui, sans-serif";
-  const detail = state.result === "cleared"
-    ? `${currentStage.name} cleared.`
-    : state.message === "Crash!" ? "Hit the obstacle." : "Too much swing.";
-  ctx.fillText(detail, W / 2, H / 2 + 10);
-  ctx.font = "600 14px system-ui, sans-serif";
-  ctx.fillText("Tap Restart to try again", W / 2, H / 2 + 42);
-  ctx.textAlign = "left";
+}
+
+function resultDetailText() {
+  if (state.result === "cleared") return `${currentStage.name} cleared.`;
+  return state.message === "Crash!" ? "Hit the obstacle." : "Too much swing.";
+}
+
+function syncResultPanel() {
+  const visible = appScreen === "game" && state.result !== "running";
+  resultPanel.classList.toggle("hidden", !visible);
+  if (!visible) return;
+  resultTitle.textContent = state.message;
+  resultText.textContent = resultDetailText();
 }
 
 function drawDemoCue() {
@@ -1016,6 +1023,7 @@ function setScreen(nextScreen) {
   shell.classList.toggle("menu-mode", ["start", "stage", "purchase", "tutorial"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
   shell.classList.toggle("play-mode", nextScreen === "game");
+  resultPanel.classList.add("hidden");
   if (nextScreen !== "demo") {
     buttonCue.className = "button-cue hidden";
     buttonCue.textContent = "";
@@ -1027,6 +1035,8 @@ function showTitle() {
 }
 
 function showStageSelect() {
+  state.keys.clear();
+  state.buttons.clear();
   buildStageGrid();
   setScreen("stage");
 }
@@ -1127,6 +1137,15 @@ function unlockAllStages() {
   showStageSelect();
 }
 
+function bindMenuAction(button, action) {
+  const run = (event) => {
+    event.preventDefault();
+    action();
+  };
+  button.addEventListener("click", run);
+  button.addEventListener("pointerup", run);
+}
+
 function bindDirection(button, direction) {
   const start = (event) => {
     event.preventDefault();
@@ -1146,8 +1165,10 @@ bindDirection(leftBtn, "left");
 bindDirection(rightBtn, "right");
 bindDirection(upBtn, "up");
 bindDirection(downBtn, "down");
-restartBtn.addEventListener("click", startGame);
-stageMenuBtn.addEventListener("click", showStageSelect);
+bindMenuAction(restartBtn, () => startGame());
+bindMenuAction(stageMenuBtn, showStageSelect);
+bindMenuAction(resultRestartBtn, () => startGame());
+bindMenuAction(resultStageBtn, showStageSelect);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
 stageBackButton.addEventListener("click", showTitle);

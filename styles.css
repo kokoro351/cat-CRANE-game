@@ -160,7 +160,8 @@ button:active {
 
 .screen.hidden,
 .demo-label.hidden,
-.button-cue.hidden {
+.button-cue.hidden,
+.result-panel.hidden {
   display: none;
 }
 
@@ -395,6 +396,48 @@ button:active {
   font-weight: 800;
   text-align: center;
   box-shadow: 0 8px 18px rgb(23 33 43 / 14%);
+}
+
+.result-panel {
+  position: absolute;
+  left: 38px;
+  right: 38px;
+  top: 50%;
+  z-index: 4;
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.94);
+  color: var(--ink);
+  text-align: center;
+  box-shadow: 0 16px 36px rgb(23 33 43 / 24%);
+  transform: translateY(-50%);
+}
+
+.result-panel h2,
+.result-panel p {
+  margin: 0;
+}
+
+.result-panel h2 {
+  font-size: 2rem;
+}
+
+.result-panel p {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.result-actions button {
+  min-height: 52px;
+  padding: 0 10px;
 }
 
 .controls {
