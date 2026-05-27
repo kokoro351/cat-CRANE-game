@@ -440,19 +440,20 @@ function step(now) {
 }
 
 function updatePhysics(dt, input = readInput(), allowEnd = true) {
+  const windCenter = currentStage.windCenter || 0;
   const targetAccel = input.x !== 0 ? input.x * 88 : state.speed === 0 ? 0 : -Math.sign(state.speed) * 22;
   state.accel += (targetAccel - state.accel) * Math.min(1, dt * 9);
 
   state.speed = Math.max(-58, Math.min(132, state.speed + state.accel * dt));
   if (input.x === 0 && Math.abs(state.speed) < 2) state.speed = 0;
-  state.distance = Math.max(0, Math.min(goalDistance, state.distance + state.speed * dt));
+  const windDrift = input.x === 0 && windCenter ? Math.sign(windCenter) * 10 : 0;
+  state.distance = Math.max(0, Math.min(goalDistance, state.distance + (state.speed + windDrift) * dt));
 
   state.ropeLength = Math.max(minRopeLength, Math.min(maxRopeLength, state.ropeLength + input.y * 88 * dt));
 
   const gravity = 9.8;
   const lengthMeters = state.ropeLength / 58;
   const trolleyAccel = state.accel / 26;
-  const windCenter = currentStage.windCenter || 0;
   const pendulumForce = -(gravity / lengthMeters) * Math.sin(state.angle - windCenter) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
   state.angularVelocity += pendulumForce * dt;
   state.angularVelocity *= 0.998;
@@ -950,6 +951,38 @@ function drawWind() {
     ctx.moveTo(endX, y);
     ctx.lineTo(endX - direction * 14, y + 10);
     ctx.stroke();
+  }
+  ctx.restore();
+  drawWindLeaves(direction);
+}
+
+function drawWindLeaves(direction) {
+  ctx.save();
+  const travel = W + 180;
+  const colors = ["#8fb339", "#d6a33f", "#6aa56f", "#c98530"];
+  for (let i = 0; i < 14; i += 1) {
+    const speed = 48 + i * 9;
+    const phase = i * 0.37;
+    const progress = ((state.stageTime * speed + phase * 180 + cameraX() * 0.12) % travel);
+    const x = direction < 0 ? W + 80 - progress : -80 + progress;
+    const y = 136 + ((i * 47 + Math.sin(state.stageTime * 1.4 + i) * 22) % 340);
+    const wobble = Math.sin(state.stageTime * 4 + i) * 8;
+
+    ctx.save();
+    ctx.translate(x, y + wobble);
+    ctx.rotate(direction * 0.7 + Math.sin(state.stageTime * 3 + i) * 0.65);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.strokeStyle = "rgb(37 51 63 / 0.36)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 9, 4.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-7, 0);
+    ctx.lineTo(7, 0);
+    ctx.stroke();
+    ctx.restore();
   }
   ctx.restore();
 }
