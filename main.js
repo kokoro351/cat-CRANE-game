@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 const distanceEl = document.querySelector("#distance");
 const swingEl = document.querySelector("#swing");
 const restartBtn = document.querySelector("#restart");
+const stageMenuBtn = document.querySelector("#stage-menu");
 const leftBtn = document.querySelector("#left");
 const rightBtn = document.querySelector("#right");
 const upBtn = document.querySelector("#up");
@@ -42,6 +43,7 @@ const dangerAngle = 34;
 const warningAngle = 24;
 const freeStageCount = 4;
 const stageUnlockKey = "catCrane.allStagesUnlocked";
+const clearedStagesKey = "catCrane.clearedStages";
 const stages = [
   { name: "ステージ1", distance: 2200, obstacles: [], gates: [] },
   {
@@ -284,6 +286,7 @@ const stages = [
 let currentStageIndex = 0;
 let currentStage = stages[currentStageIndex];
 let allStagesUnlocked = localStorage.getItem(stageUnlockKey) === "true";
+let clearedStages = loadClearedStages();
 const tutorialScenes = [
   {
     title: "シーン 1",
@@ -429,7 +432,23 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
     state.result = "cleared";
     state.message = "Goal!";
     state.distance = goalDistance;
+    markStageCleared(currentStageIndex + 1);
   }
+}
+
+function loadClearedStages() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(clearedStagesKey) || "[]");
+    return new Set(Array.isArray(parsed) ? parsed.filter(Number.isInteger) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markStageCleared(stageNumber) {
+  if (clearedStages.has(stageNumber)) return;
+  clearedStages.add(stageNumber);
+  localStorage.setItem(clearedStagesKey, JSON.stringify([...clearedStages]));
 }
 
 function throwLoad(x, y) {
@@ -1082,12 +1101,14 @@ function buildStageGrid() {
     : `ステージ1〜${freeStageCount}は無料 / ステージ${freeStageCount + 1}〜20は全解放購入`;
   for (let i = 1; i <= stages.length; i += 1) {
     const locked = i > freeStageCount && !allStagesUnlocked;
+    const cleared = clearedStages.has(i);
     const button = document.createElement("button");
     button.type = "button";
     button.classList.toggle("locked-stage", locked);
+    button.classList.toggle("cleared-stage", cleared);
     button.innerHTML = locked
       ? `<span>${stages[i - 1].name}</span><small>LOCK</small>`
-      : `<span>${stages[i - 1].name}</span>`;
+      : `<span>${stages[i - 1].name}</span>${cleared ? "<b>CLEAR</b>" : ""}`;
     button.addEventListener("click", () => {
       if (locked) {
         showPurchase();
@@ -1126,6 +1147,7 @@ bindDirection(rightBtn, "right");
 bindDirection(upBtn, "up");
 bindDirection(downBtn, "down");
 restartBtn.addEventListener("click", startGame);
+stageMenuBtn.addEventListener("click", showStageSelect);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
 stageBackButton.addEventListener("click", showTitle);

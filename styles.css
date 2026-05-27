@@ -65,6 +65,19 @@ body {
   box-shadow: 0 8px 24px rgb(23 33 43 / 8%);
 }
 
+.hud-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.hud-actions button {
+  min-width: 78px;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+}
+
 .menu-mode .hud,
 .menu-mode .controls {
   display: none;
@@ -195,11 +208,13 @@ button:active {
 }
 
 .stage-grid button {
+  position: relative;
   display: grid;
   place-items: center;
   gap: 2px;
   min-height: 54px;
   padding: 0;
+  overflow: hidden;
 }
 
 .stage-grid button[disabled],
@@ -216,6 +231,19 @@ button:active {
   font-size: 0.64rem;
   letter-spacing: 0;
   opacity: 0.86;
+}
+
+.stage-grid button b {
+  position: absolute;
+  inset: auto -22px 6px auto;
+  width: 92px;
+  padding: 3px 0;
+  background: var(--warning);
+  color: var(--ink);
+  font-size: 0.62rem;
+  letter-spacing: 0;
+  transform: rotate(-16deg);
+  box-shadow: 0 3px 8px rgb(23 33 43 / 18%);
 }
 
 .unlock-status {
