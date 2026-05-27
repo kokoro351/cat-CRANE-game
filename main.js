@@ -117,7 +117,7 @@ function updatePhysics(dt) {
 
   if (Math.abs(toDeg(state.angle)) >= dangerAngle) {
     state.result = "dropped";
-    state.message = "Steel flew off!";
+    state.message = "Thrown off!";
     const load = loadPosition();
     state.beamX = load.x;
     state.beamY = load.y;
@@ -199,7 +199,6 @@ function drawCrane() {
   ctx.fillRect(x - 31, railY - 36, 62, 32);
   ctx.fillStyle = "#25333f";
   ctx.fillRect(x - 20, railY - 7, 40, 16);
-  drawOperatorCat(x, railY - 52);
 
   ctx.strokeStyle = swingColor();
   ctx.lineWidth = 5;
@@ -220,58 +219,80 @@ function drawCrane() {
   ctx.fill();
 }
 
-function drawOperatorCat(x, y) {
+function drawBeamCat() {
   ctx.save();
-  ctx.translate(x, y);
+  ctx.translate(4, -49);
 
   ctx.fillStyle = "#f7a65a";
   ctx.beginPath();
-  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.arc(0, -23, 14, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(-13, -10);
-  ctx.lineTo(-7, -27);
-  ctx.lineTo(-2, -11);
-  ctx.moveTo(13, -10);
-  ctx.lineTo(7, -27);
-  ctx.lineTo(2, -11);
+  ctx.moveTo(-10, -31);
+  ctx.lineTo(-6, -45);
+  ctx.lineTo(-2, -32);
+  ctx.moveTo(10, -31);
+  ctx.lineTo(6, -45);
+  ctx.lineTo(2, -32);
   ctx.fill();
 
   ctx.fillStyle = "#f0b429";
   ctx.beginPath();
-  ctx.arc(0, -6, 19, Math.PI, Math.PI * 2);
-  ctx.lineTo(19, -6);
-  ctx.lineTo(-19, -6);
+  ctx.arc(0, -28, 15, Math.PI, Math.PI * 2);
+  ctx.lineTo(15, -28);
+  ctx.lineTo(-15, -28);
   ctx.closePath();
   ctx.fill();
-  ctx.fillRect(-21, -7, 42, 6);
+  ctx.fillRect(-17, -29, 34, 5);
 
   ctx.strokeStyle = "#9b6b00";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.7;
   ctx.beginPath();
-  ctx.moveTo(-9, -23);
-  ctx.lineTo(-9, -8);
-  ctx.moveTo(0, -25);
-  ctx.lineTo(0, -8);
-  ctx.moveTo(9, -23);
-  ctx.lineTo(9, -8);
+  ctx.moveTo(-7, -41);
+  ctx.lineTo(-7, -29);
+  ctx.moveTo(0, -43);
+  ctx.lineTo(0, -29);
+  ctx.moveTo(7, -41);
+  ctx.lineTo(7, -29);
   ctx.stroke();
 
   ctx.fillStyle = "#101820";
   ctx.beginPath();
-  ctx.arc(-6, -1, 2.6, 0, Math.PI * 2);
-  ctx.arc(6, -1, 2.6, 0, Math.PI * 2);
+  ctx.arc(-5, -23, 2.2, 0, Math.PI * 2);
+  ctx.arc(5, -23, 2.2, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = "#101820";
-  ctx.lineWidth = 1.8;
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.moveTo(0, 3);
-  ctx.lineTo(0, 8);
-  ctx.moveTo(-6, 8);
-  ctx.quadraticCurveTo(0, 13, 6, 8);
+  ctx.moveTo(0, -19);
+  ctx.lineTo(0, -15);
+  ctx.moveTo(-5, -14);
+  ctx.quadraticCurveTo(0, -10, 5, -14);
   ctx.stroke();
+
+  ctx.fillStyle = "#f7a65a";
+  ctx.fillRect(-9, -9, 18, 24);
+
+  ctx.strokeStyle = "#101820";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-7, 13);
+  ctx.lineTo(-11, 25);
+  ctx.moveTo(7, 13);
+  ctx.lineTo(20, 5);
+  ctx.moveTo(-9, -3);
+  ctx.lineTo(-25, -10);
+  ctx.moveTo(9, -3);
+  ctx.lineTo(28, -15);
+  ctx.stroke();
+
+  ctx.fillStyle = "#101820";
+  ctx.beginPath();
+  ctx.arc(30, -16, 2.4, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.restore();
 }
@@ -295,6 +316,8 @@ function drawSteelBeam(x, y, rotation) {
   ctx.moveTo(-38, 4);
   ctx.lineTo(38, 4);
   ctx.stroke();
+
+  drawBeamCat();
 
   ctx.restore();
 }
