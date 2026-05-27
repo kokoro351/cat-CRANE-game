@@ -553,12 +553,11 @@ function updateStageClearDemo(dt) {
     updateStage4ClearDemo(dt);
     return;
   }
-  const targetRope = demoRopeTarget(state.distance + 165);
+  const targetRope = demoRopeTarget(state.distance + demoLookAhead());
   const ropeError = targetRope - state.ropeLength;
   const y = ropeError > 28 ? 1 : ropeError < -28 ? -1 : 0;
-  const notchPhase = demoTime % 4.8;
-  const x = state.distance >= goalDistance ? 0 : state.speed < 46 || notchPhase < 4.0 ? 1 : 0;
-  const label = y < 0 ? "UP" : y > 0 ? "DOWN" : x > 0 ? "RIGHT" : "COAST";
+  const x = demoHorizontalInput(ropeError);
+  const label = y < 0 ? "UP" : y > 0 ? "DOWN" : x > 0 ? "RIGHT" : x < 0 ? "LEFT" : "COAST";
 
   demoInput = { x, y, label };
   demoLabel.textContent = stageDemoInstruction(label);
@@ -573,6 +572,44 @@ function updateStageClearDemo(dt) {
     demoInput = { x: 0, y: 0, label: "COAST" };
     showStageSelect();
   }
+}
+
+function demoLookAhead() {
+  return Math.max(120, Math.min(230, 130 + state.speed * 1.5));
+}
+
+function demoHorizontalInput(ropeError) {
+  if (state.distance >= goalDistance) return 0;
+  const desiredSpeed = currentStageIndex === 4 ? 108 : currentStageIndex >= 5 ? 52 : 42;
+  const mustAdjustHeight = Math.abs(ropeError) > 46;
+  const shouldWait = demoShouldWaitForHazard();
+
+  if (shouldWait || mustAdjustHeight) {
+    if (state.speed > 18) return -0.35;
+    if (currentStage.windCenter) return -Math.sign(currentStage.windCenter) * 0.22;
+    return 0;
+  }
+  if (state.speed < desiredSpeed) return 1;
+  if (state.speed > desiredSpeed + 12) return -0.25;
+  return currentStage.windCenter ? -Math.sign(currentStage.windCenter) * 0.16 : 0;
+}
+
+function demoShouldWaitForHazard() {
+  const load = loadWorldPosition();
+  const checkX = load.x + 170;
+  const closedGate = currentStage.gates.some((gate) => {
+    if (gateIsOpen(gate)) return false;
+    if (gate.x < load.x + 80 || gate.x > checkX) return false;
+    const gapY = gateGapY(gate);
+    const gap = gateClearance(gate) - 24;
+    return load.y < gapY - gap / 2 || load.y > gapY + gap / 2;
+  });
+  if (closedGate) return true;
+
+  return activeProjectiles().some((projectile) => {
+    const dx = projectile.x - load.x;
+    return dx > 30 && dx < 190 && Math.abs(projectile.y - load.y) < 82;
+  });
 }
 
 function updateStage4ClearDemo(dt) {
@@ -633,6 +670,24 @@ function stageDemoInstruction(label) {
 
 function demoRopeTarget(distance) {
   let target = 142;
+  const pendingSwitch = (currentStage.switches || [])
+    .find((stageSwitch) => !state.switches[stageSwitch.id] && Math.abs(stageSwitch.x - distance) < 360);
+  if (pendingSwitch) {
+    return Math.max(minRopeLength + 10, Math.min(maxRopeLength - 10, pendingSwitch.y - 134));
+  }
+
+  const load = loadWorldPosition();
+  const threateningProjectile = activeProjectiles()
+    .filter((projectile) => {
+      const dx = projectile.x - load.x;
+      return dx > 20 && dx < 240 && Math.abs(projectile.y - load.y) < 118;
+    })
+    .sort((a, b) => Math.abs(a.x - load.x) - Math.abs(b.x - load.x))[0];
+  if (threateningProjectile) {
+    const avoidY = threateningProjectile.y < load.y ? threateningProjectile.y + 170 : threateningProjectile.y - 170;
+    return Math.max(minRopeLength + 10, Math.min(maxRopeLength - 10, avoidY - railY - 34));
+  }
+
   const nearbyGate = currentStage.gates
     .filter((gate) => Math.abs(gate.x - distance) < 260)
     .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
@@ -644,7 +699,7 @@ function demoRopeTarget(distance) {
     .filter((obstacle) => obstacle.x + obstacle.w > distance - 130 && obstacle.x < distance + 280)
     .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
   if (nearbyObstacle) {
-    target = nearbyObstacle.y > 340 ? 86 : 210;
+    target = nearbyObstacle.h > 96 ? 86 : nearbyObstacle.y > 340 ? 86 : 210;
   }
   const nearbyMachine = state.machines
     .filter((machine) => machine.x + machine.w > distance - 170 && machine.x < distance + 320)
