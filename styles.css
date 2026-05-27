@@ -440,6 +440,16 @@ button:active {
   padding: 0 10px;
 }
 
+.result-actions .demo-watch {
+  grid-column: 1 / -1;
+  background: var(--warning);
+  color: var(--ink);
+}
+
+.result-actions .demo-watch.hidden {
+  display: none;
+}
+
 .controls {
   position: relative;
   grid-template-columns: repeat(3, minmax(0, 1fr));

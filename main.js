@@ -32,6 +32,7 @@ const resultTitle = document.querySelector("#result-title");
 const resultText = document.querySelector("#result-text");
 const resultRestartBtn = document.querySelector("#result-restart");
 const resultStageBtn = document.querySelector("#result-stage");
+const resultDemoBtn = document.querySelector("#result-demo");
 const beamCatSprite = new Image();
 beamCatSprite.src = "assets/cat-beam-anime.png";
 
@@ -374,7 +375,7 @@ function toDeg(rad) {
 }
 
 function readInput() {
-  if (appScreen === "demo") return demoInput;
+  if (appScreen === "demo" || appScreen === "stageDemo") return demoInput;
   const right = state.keys.has("ArrowRight") || state.keys.has("d") || state.buttons.has("right");
   const left = state.keys.has("ArrowLeft") || state.keys.has("a") || state.buttons.has("left");
   const up = state.keys.has("ArrowUp") || state.keys.has("w") || state.buttons.has("up");
@@ -392,6 +393,8 @@ function step(now) {
 
   if (appScreen === "demo") {
     updateDemo(dt);
+  } else if (appScreen === "stageDemo") {
+    updateStageClearDemo(dt);
   } else if (appScreen === "game" && state.result === "running") {
     updatePhysics(dt);
   } else if (appScreen === "game" && state.result === "dropped") {
@@ -489,6 +492,41 @@ function updateDemo(dt) {
   if (demoTime > 8.9) {
     showStageSelect();
   }
+}
+
+function updateStageClearDemo(dt) {
+  demoTime += dt;
+  const targetSpeed = 118;
+  state.speed = targetSpeed;
+  state.accel = 0;
+  state.distance = Math.min(goalDistance, state.distance + targetSpeed * dt);
+  state.angle = Math.sin(demoTime * 2.2) * 0.018;
+  state.angularVelocity = 0;
+  const targetRope = demoRopeTarget(state.distance);
+  state.ropeLength += (targetRope - state.ropeLength) * Math.min(1, dt * 3.4);
+  demoInput = { x: state.distance >= goalDistance ? 0 : 1, y: 0, label: "DEMO" };
+
+  if (state.distance >= goalDistance && demoTime > goalDistance / targetSpeed + 1.1) {
+    showStageSelect();
+  }
+}
+
+function demoRopeTarget(distance) {
+  let target = 142;
+  const nearbyGate = currentStage.gates
+    .filter((gate) => Math.abs(gate.x - distance) < 260)
+    .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
+  if (nearbyGate) {
+    return Math.max(minRopeLength + 10, Math.min(maxRopeLength - 10, gateGapY(nearbyGate) - 204));
+  }
+
+  const nearbyObstacle = currentStage.obstacles
+    .filter((obstacle) => obstacle.x + obstacle.w > distance - 130 && obstacle.x < distance + 280)
+    .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
+  if (nearbyObstacle) {
+    target = nearbyObstacle.y > 340 ? 86 : 210;
+  }
+  return target;
 }
 
 function craneX() {
@@ -718,7 +756,7 @@ function drawTrack() {
 }
 
 function drawStageHazards() {
-  if (appScreen !== "game") return;
+  if (appScreen !== "game" && appScreen !== "stageDemo") return;
   currentStage.obstacles.forEach(drawObstacle);
   currentStage.gates.forEach(drawGate);
 }
@@ -1006,6 +1044,7 @@ function resultDetailText() {
 function syncResultPanel() {
   const visible = appScreen === "game" && state.result !== "running";
   resultPanel.classList.toggle("hidden", !visible);
+  resultDemoBtn.classList.toggle("hidden", !visible || state.result !== "dropped");
   if (!visible) return;
   resultTitle.textContent = state.message;
   resultText.textContent = resultDetailText();
@@ -1054,12 +1093,12 @@ function setScreen(nextScreen) {
   stageScreen.classList.toggle("hidden", nextScreen !== "stage");
   purchaseScreen.classList.toggle("hidden", nextScreen !== "purchase");
   tutorialScreen.classList.toggle("hidden", nextScreen !== "tutorial");
-  demoLabel.classList.toggle("hidden", nextScreen !== "demo");
+  demoLabel.classList.toggle("hidden", !["demo", "stageDemo"].includes(nextScreen));
   shell.classList.toggle("menu-mode", ["start", "stage", "purchase", "tutorial"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
-  shell.classList.toggle("play-mode", nextScreen === "game");
+  shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo");
   resultPanel.classList.add("hidden");
-  if (nextScreen !== "demo") {
+  if (nextScreen !== "demo" && nextScreen !== "stageDemo") {
     buttonCue.className = "button-cue hidden";
     buttonCue.textContent = "";
   }
@@ -1089,6 +1128,14 @@ function startGame(stageNumber = currentStageIndex + 1) {
   setScreen("game");
 }
 
+function startStageClearDemo() {
+  reset();
+  demoTime = 0;
+  demoInput = { x: 1, y: 0, label: "DEMO" };
+  demoLabel.textContent = `見本プレイ: ${currentStage.name} クリア例`;
+  setScreen("stageDemo");
+}
+
 function startTutorial() {
   storyIndex = 0;
   renderStory();
@@ -1113,6 +1160,7 @@ function startDemo() {
   state.angularVelocity = 0;
   demoTime = 0;
   demoInput = { x: 0, y: 0, label: "COAST" };
+  demoLabel.textContent = "見本運転: 右にチョン押し → 揺れを見て右に長押し";
   setScreen("demo");
 }
 
@@ -1204,6 +1252,7 @@ bindMenuAction(restartBtn, () => startGame());
 bindMenuAction(stageMenuBtn, showStageSelect);
 bindMenuAction(resultRestartBtn, () => startGame());
 bindMenuAction(resultStageBtn, showStageSelect);
+bindMenuAction(resultDemoBtn, startStageClearDemo);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
 stageBackButton.addEventListener("click", showTitle);
