@@ -724,7 +724,7 @@ function machineHitRect(machine) {
     return { x: machine.x - 54, y: machine.y, w: machine.w + 70, h: machine.h };
   }
   if (machine.kind === "forklift") {
-    return { x: machine.x + machine.w * 0.375, y: machine.y, w: machine.w * 0.25, h: machine.h };
+    return { x: machine.x + machine.w * 0.46, y: machine.y, w: machine.w * 0.08, h: machine.h };
   }
   return { x: machine.x, y: machine.y, w: machine.w, h: machine.h };
 }
