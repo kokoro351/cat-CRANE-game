@@ -81,7 +81,7 @@ const stages = [
     obstacles: [],
     gates: [],
     machines: [
-      { kind: "excavator", startX: 1260, y: 398, w: 250, h: 126, triggerX: 700, leftX: 850, exitX: 2780, leftSpeed: 145, rightSpeed: 220 },
+      { kind: "excavator", startX: 1500, y: 150, w: 330, h: 388, triggerX: 620, leftX: 420, exitX: 2840, leftSpeed: 66, rightSpeed: 185 },
     ],
   },
   {
@@ -90,7 +90,7 @@ const stages = [
     obstacles: [{ x: 1080, y: 246, w: 160, h: 48 }],
     gates: [{ x: 1760, w: 34, gapY: 352, gap: 142, phase: 0.7, speed: 2.0 }],
     machines: [
-      { kind: "forklift", startX: -620, y: 432, w: 190, h: 92, chaseGap: 420, speed: 112, maxX: 2920 },
+      { kind: "forklift", startX: -180, y: 422, w: 220, h: 102, chaseGap: 220, speed: 210, maxX: 2920 },
     ],
   },
   {
@@ -932,45 +932,65 @@ function drawMachine(machine) {
 function drawExcavator(machine) {
   const x = worldToScreen(machine.x);
   if (x + machine.w < -80 || x > W + 80) return;
-  const y = machine.y;
+  const topY = machine.y;
+  const baseY = machine.y + machine.h;
+  const bodyY = baseY - 98;
+  const cabinY = bodyY - 66;
+  const armBaseX = x + machine.w * 0.58;
+  const armMidX = x + machine.w * 0.28;
+  const bucketX = x - 24;
 
   ctx.save();
+  ctx.fillStyle = "rgb(214 69 69 / 0.16)";
+  ctx.fillRect(x + 8, topY, machine.w - 16, machine.h);
+
   ctx.fillStyle = "#f0b429";
   ctx.strokeStyle = "#25333f";
   ctx.lineWidth = 4;
-  ctx.fillRect(x + 58, y + 38, 118, 52);
-  ctx.strokeRect(x + 58, y + 38, 118, 52);
+  ctx.fillRect(x + 78, bodyY, 154, 62);
+  ctx.strokeRect(x + 78, bodyY, 154, 62);
   ctx.fillStyle = "#d88918";
-  ctx.fillRect(x + 96, y + 6, 64, 44);
-  ctx.strokeRect(x + 96, y + 6, 64, 44);
+  ctx.fillRect(x + 138, cabinY, 76, 62);
+  ctx.strokeRect(x + 138, cabinY, 76, 62);
+  ctx.fillStyle = "rgb(255 255 255 / 0.55)";
+  ctx.fillRect(x + 154, cabinY + 14, 34, 24);
 
   ctx.strokeStyle = "#25333f";
-  ctx.lineWidth = 14;
+  ctx.lineWidth = 18;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(x + 72, y + 36);
-  ctx.lineTo(x + 22, y + 10);
-  ctx.lineTo(x - 14, y + 52);
+  ctx.moveTo(armBaseX, bodyY + 8);
+  ctx.lineTo(armMidX, topY + 72);
+  ctx.lineTo(bucketX + 44, topY + 22);
   ctx.stroke();
-  ctx.fillStyle = "#6f7f89";
+
+  ctx.strokeStyle = "#d88918";
+  ctx.lineWidth = 10;
   ctx.beginPath();
-  ctx.moveTo(x - 28, y + 58);
-  ctx.lineTo(x + 24, y + 50);
-  ctx.lineTo(x + 12, y + 82);
-  ctx.lineTo(x - 32, y + 78);
+  ctx.moveTo(armBaseX, bodyY + 8);
+  ctx.lineTo(armMidX, topY + 72);
+  ctx.lineTo(bucketX + 44, topY + 22);
+  ctx.stroke();
+
+  ctx.fillStyle = "#6f7f89";
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(bucketX - 18, topY + 18);
+  ctx.lineTo(bucketX + 56, topY + 6);
+  ctx.lineTo(bucketX + 44, topY + 58);
+  ctx.lineTo(bucketX - 24, topY + 66);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = "#25333f";
-  ctx.fillRect(x + 44, y + 88, 150, 24);
+  ctx.fillRect(x + 54, baseY - 28, 214, 28);
   ctx.fillStyle = "#17212b";
   ctx.beginPath();
-  ctx.arc(x + 72, y + 104, 18, 0, Math.PI * 2);
-  ctx.arc(x + 156, y + 104, 18, 0, Math.PI * 2);
+  ctx.arc(x + 92, baseY - 2, 22, 0, Math.PI * 2);
+  ctx.arc(x + 212, baseY - 2, 22, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "rgb(255 255 255 / 0.55)";
-  ctx.fillRect(x + 112, y + 18, 30, 18);
   ctx.restore();
 }
 
