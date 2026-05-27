@@ -20,6 +20,7 @@ const storyText = document.querySelector("#story-text");
 const storyVisual = document.querySelector("#story-visual");
 const storyNextButton = document.querySelector("#story-next");
 const demoLabel = document.querySelector("#demo-label");
+const buttonCue = document.querySelector("#button-cue");
 const beamCatSprite = new Image();
 beamCatSprite.src = "assets/cat-beam-anime.png";
 
@@ -183,14 +184,21 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
 
 function updateDemo(dt) {
   demoTime += dt;
-  const phase = demoTime % 3.8;
-  if ((phase > 0.45 && phase < 1.35) || (phase > 2.05 && phase < 2.95)) {
-    demoInput = { x: -0.55, y: 0, label: "LEFT" };
+  if (demoTime > 0.5 && demoTime < 1.02) {
+    demoInput = { x: 1, y: 0, label: "RIGHT" };
+  } else if (demoTime > 1.95 && demoTime < 8.4) {
+    demoInput = { x: 0.72, y: 0, label: "RIGHT" };
   } else {
     demoInput = { x: 0, y: 0, label: "COAST" };
   }
   updatePhysics(dt, demoInput, false);
-  if (demoTime > 8.8) {
+  if (demoTime > 2.06) {
+    const angleDamping = demoTime < 3.35 ? 4.8 : 1.35;
+    const velocityDamping = demoTime < 3.35 ? 7.2 : 2.1;
+    state.angle *= Math.max(0, 1 - dt * angleDamping);
+    state.angularVelocity *= Math.max(0, 1 - dt * velocityDamping);
+  }
+  if (demoTime > 8.9) {
     showStageSelect();
   }
 }
@@ -222,6 +230,7 @@ function draw() {
   drawScene();
   drawTrack();
   drawCrane();
+  drawDemoCue();
   drawMeters();
   if (state.result !== "running") drawResult();
 }
@@ -592,6 +601,43 @@ function drawResult() {
   ctx.textAlign = "left";
 }
 
+function drawDemoCue() {
+  if (appScreen !== "demo" || demoTime < 2.15 || demoTime > 3.45) return;
+  const load = loadPosition();
+  drawSpeechBubble(load.x + 48, load.y - 72, "ピタッ");
+}
+
+function drawSpeechBubble(x, y, text) {
+  ctx.save();
+  ctx.font = "900 22px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const width = Math.max(80, ctx.measureText(text).width + 34);
+  const height = 42;
+  const bx = Math.max(12, Math.min(W - width - 12, x - width / 2));
+  const by = Math.max(64, Math.min(H - height - 102, y - height / 2));
+
+  ctx.fillStyle = "rgb(255 255 255 / 0.96)";
+  ctx.strokeStyle = "#d64545";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(bx, by, width, height, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(bx + width * 0.38, by + height - 1);
+  ctx.lineTo(bx + width * 0.48, by + height + 17);
+  ctx.lineTo(bx + width * 0.56, by + height - 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#d64545";
+  ctx.fillText(text, bx + width / 2, by + height / 2);
+  ctx.restore();
+}
+
 function setScreen(nextScreen) {
   appScreen = nextScreen;
   startScreen.classList.toggle("hidden", nextScreen !== "start");
@@ -601,6 +647,10 @@ function setScreen(nextScreen) {
   shell.classList.toggle("menu-mode", ["start", "stage", "tutorial"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
   shell.classList.toggle("play-mode", nextScreen === "game");
+  if (nextScreen !== "demo") {
+    buttonCue.className = "button-cue hidden";
+    buttonCue.textContent = "";
+  }
 }
 
 function showTitle() {
@@ -633,11 +683,11 @@ function renderStory() {
 
 function startDemo() {
   reset();
-  state.distance = 520;
-  state.speed = 54;
+  state.distance = 80;
+  state.speed = 0;
   state.accel = 0;
-  state.angle = 0.07;
-  state.angularVelocity = -0.1;
+  state.angle = 0;
+  state.angularVelocity = 0;
   demoTime = 0;
   demoInput = { x: 0, y: 0, label: "COAST" };
   setScreen("demo");
@@ -649,6 +699,21 @@ function syncButtonStates() {
   rightBtn.classList.toggle("is-pressed", input.x > 0);
   upBtn.classList.toggle("is-pressed", input.y < 0);
   downBtn.classList.toggle("is-pressed", input.y > 0);
+  syncDemoCues();
+}
+
+function syncDemoCues() {
+  if (appScreen !== "demo") return;
+  if (demoTime > 0.5 && demoTime < 1.02) {
+    buttonCue.textContent = "チョン押し";
+    buttonCue.className = "button-cue tap";
+  } else if (demoTime > 1.86 && demoTime < 4.0) {
+    buttonCue.textContent = "長押し";
+    buttonCue.className = "button-cue hold";
+  } else {
+    buttonCue.className = "button-cue hidden";
+    buttonCue.textContent = "";
+  }
 }
 
 function buildStageGrid() {
