@@ -347,8 +347,9 @@ function drawSteelBeam(x, y, rotation) {
     const width = 112;
     const scale = width / beamCatSprite.naturalWidth;
     const height = beamCatSprite.naturalHeight * scale;
-    const beamCenterY = 472 * scale;
-    ctx.drawImage(beamCatSprite, -width / 2, -beamCenterY, width, height);
+    const hookAnchorX = 166 * scale;
+    const hookAnchorY = 9 * scale;
+    ctx.drawImage(beamCatSprite, -hookAnchorX, -hookAnchorY, width, height);
     ctx.restore();
     return;
   }
