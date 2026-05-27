@@ -40,6 +40,15 @@ body {
   padding: 12px;
 }
 
+.game-shell.menu-mode {
+  grid-template-rows: 1fr;
+}
+
+.game-shell.demo-mode,
+.game-shell.play-mode {
+  grid-template-rows: auto 1fr auto;
+}
+
 .hud,
 .controls {
   display: grid;
@@ -54,6 +63,23 @@ body {
   border-radius: 8px;
   padding: 10px;
   box-shadow: 0 8px 24px rgb(23 33 43 / 8%);
+}
+
+.menu-mode .hud,
+.menu-mode .controls,
+.demo-mode .controls {
+  display: none;
+}
+
+.play-area {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.menu-mode .play-area {
+  min-height: calc(100vh - 24px);
 }
 
 .label {
@@ -100,6 +126,199 @@ button:active {
   border-radius: 8px;
   background: var(--sky);
   box-shadow: 0 12px 30px rgb(23 33 43 / 12%);
+}
+
+.menu-mode #game {
+  display: none;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(#a8dcff 0%, #eef9ff 58%, #f6d47c 100%);
+  box-shadow: 0 12px 30px rgb(23 33 43 / 12%);
+  overflow: hidden;
+}
+
+.screen.hidden,
+.demo-label.hidden {
+  display: none;
+}
+
+.title-cat {
+  width: min(68%, 250px);
+  justify-self: center;
+  filter: drop-shadow(0 10px 12px rgb(23 33 43 / 18%));
+}
+
+.screen h1,
+.screen h2 {
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.screen h1 {
+  font-size: clamp(1.9rem, 9vw, 2.55rem);
+  line-height: 1.05;
+}
+
+.screen h1 span {
+  font-size: 1rem;
+}
+
+.menu-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.menu-actions button,
+.story-card button,
+.secondary {
+  min-height: 52px;
+}
+
+.secondary {
+  background: #52616d;
+}
+
+.stage-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stage-grid button {
+  min-height: 54px;
+  padding: 0;
+}
+
+.stage-grid button[disabled] {
+  background: #a9b5bd;
+  color: #eef5f8;
+  cursor: not-allowed;
+}
+
+.story-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.88);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 24px rgb(23 33 43 / 14%);
+}
+
+#story-kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+#story-text {
+  min-height: 4.5rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.story-visual {
+  position: relative;
+  height: 150px;
+  border-radius: 8px;
+  background: #dff4ff;
+  overflow: hidden;
+}
+
+.story-visual::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 32px;
+  height: 8px;
+  background: #314a59;
+}
+
+.story-visual::after {
+  content: "";
+  position: absolute;
+  left: var(--cart-x, 64px);
+  top: 22px;
+  width: 48px;
+  height: 24px;
+  background: var(--accent);
+  box-shadow: 0 26px 0 -6px #25333f;
+}
+
+.story-visual .beam {
+  position: absolute;
+  left: var(--load-x, 78px);
+  top: 105px;
+  width: 86px;
+  height: 16px;
+  border: 4px solid #43525c;
+  background: #6f7f89;
+  transform: rotate(var(--load-rot, 0deg));
+}
+
+.story-visual .rope {
+  position: absolute;
+  left: calc(var(--cart-x, 64px) + 24px);
+  top: 50px;
+  width: 5px;
+  height: 72px;
+  background: #25333f;
+  transform-origin: top;
+  transform: rotate(var(--rope-rot, 0deg));
+}
+
+.story-visual.scene-2,
+.story-visual.scene-3 {
+  --cart-x: 132px;
+  --load-x: 104px;
+  --rope-rot: -14deg;
+  --load-rot: -8deg;
+}
+
+.story-visual.scene-3 {
+  --cart-x: 178px;
+  --load-x: 170px;
+  --rope-rot: 2deg;
+  --load-rot: 1deg;
+}
+
+.story-visual .pulse {
+  position: absolute;
+  right: 42px;
+  top: 62px;
+  color: var(--accent);
+  font-weight: 900;
+  font-size: 1.6rem;
+}
+
+.demo-label {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.88);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 8px 18px rgb(23 33 43 / 14%);
 }
 
 .controls {

@@ -20,7 +20,36 @@
         <button id="restart" type="button">Restart</button>
       </section>
 
-      <canvas id="game" width="390" height="680" aria-label="cat crane play field"></canvas>
+      <section class="play-area">
+        <canvas id="game" width="390" height="680" aria-label="cat crane play field"></canvas>
+
+        <div id="start-screen" class="screen">
+          <img class="title-cat" src="assets/cat-beam-anime.png" alt="">
+          <h1>追いノッチ<br><span>-クレーン猫 チャレンジ-</span></h1>
+          <div class="menu-actions">
+            <button id="tutorial-button" type="button">追いノッチチュートリアル</button>
+            <button id="stage-button" type="button">ステージ選択</button>
+          </div>
+        </div>
+
+        <div id="stage-screen" class="screen hidden">
+          <h2>ステージ選択</h2>
+          <div id="stage-grid" class="stage-grid" aria-label="stage list"></div>
+          <button id="stage-back" class="secondary" type="button">タイトルへ</button>
+        </div>
+
+        <div id="tutorial-screen" class="screen hidden">
+          <div class="story-card">
+            <p id="story-kicker">追いノッチチュートリアル</p>
+            <h2 id="story-title">シーン 1</h2>
+            <p id="story-text"></p>
+            <div id="story-visual" class="story-visual"></div>
+            <button id="story-next" type="button">次へ</button>
+          </div>
+        </div>
+
+        <div id="demo-label" class="demo-label hidden">見本運転: 動かす → 止める → 動かす</div>
+      </section>
 
       <section class="controls" aria-label="game controls">
         <button id="up" class="dir-up" type="button" aria-label="move crane up">&uarr;</button>

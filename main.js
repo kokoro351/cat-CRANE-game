@@ -7,6 +7,19 @@ const leftBtn = document.querySelector("#left");
 const rightBtn = document.querySelector("#right");
 const upBtn = document.querySelector("#up");
 const downBtn = document.querySelector("#down");
+const shell = document.querySelector(".game-shell");
+const startScreen = document.querySelector("#start-screen");
+const stageScreen = document.querySelector("#stage-screen");
+const tutorialScreen = document.querySelector("#tutorial-screen");
+const tutorialButton = document.querySelector("#tutorial-button");
+const stageButton = document.querySelector("#stage-button");
+const stageBackButton = document.querySelector("#stage-back");
+const stageGrid = document.querySelector("#stage-grid");
+const storyTitle = document.querySelector("#story-title");
+const storyText = document.querySelector("#story-text");
+const storyVisual = document.querySelector("#story-visual");
+const storyNextButton = document.querySelector("#story-next");
+const demoLabel = document.querySelector("#demo-label");
 const beamCatSprite = new Image();
 beamCatSprite.src = "assets/cat-beam-anime.png";
 
@@ -21,6 +34,26 @@ const cameraLead = 120;
 const visibleWorld = W - 148;
 const dangerAngle = 34;
 const warningAngle = 24;
+const tutorialScenes = [
+  {
+    title: "シーン 1",
+    text: "クレーンを動かすと揺れます",
+    sceneClass: "scene-1",
+    accent: "ゆらっ",
+  },
+  {
+    title: "シーン 2",
+    text: "揺れているクレーンを最適なタイミングで動かすと揺れを打ち消せる！！",
+    sceneClass: "scene-2",
+    accent: "ここ！",
+  },
+  {
+    title: "シーン 3",
+    text: "動かして、止めて、動かすと揺れずに動けるぞ！\nこれが追いノッチ運転！！",
+    sceneClass: "scene-3",
+    accent: "ヨシ！",
+  },
+];
 
 const state = {
   distance: 0,
@@ -42,6 +75,11 @@ const state = {
   beamSpin: 0,
 };
 
+let appScreen = "start";
+let storyIndex = 0;
+let demoTime = 0;
+let demoInput = { x: 0, y: 0, label: "COAST" };
+
 function reset() {
   state.distance = 0;
   state.speed = 0;
@@ -58,6 +96,8 @@ function reset() {
   state.beamVy = 0;
   state.beamRotation = 0;
   state.beamSpin = 0;
+  state.keys.clear();
+  state.buttons.clear();
   updateHud();
 }
 
@@ -71,6 +111,7 @@ function toDeg(rad) {
 }
 
 function readInput() {
+  if (appScreen === "demo") return demoInput;
   const right = state.keys.has("ArrowRight") || state.keys.has("d") || state.buttons.has("right");
   const left = state.keys.has("ArrowLeft") || state.keys.has("a") || state.buttons.has("left");
   const up = state.keys.has("ArrowUp") || state.keys.has("w") || state.buttons.has("up");
@@ -86,7 +127,9 @@ function step(now) {
   const dt = Math.min(0.033, (now - state.last) / 1000);
   state.last = now;
 
-  if (state.result === "running") {
+  if (appScreen === "demo") {
+    updateDemo(dt);
+  } else if (appScreen === "game" && state.result === "running") {
     updatePhysics(dt);
   } else if (state.result === "dropped") {
     state.beamVy += 840 * dt;
@@ -100,8 +143,7 @@ function step(now) {
   requestAnimationFrame(step);
 }
 
-function updatePhysics(dt) {
-  const input = readInput();
+function updatePhysics(dt, input = readInput(), allowEnd = true) {
   const targetAccel = input.x !== 0 ? input.x * 88 : state.speed === 0 ? 0 : -Math.sign(state.speed) * 22;
   state.accel += (targetAccel - state.accel) * Math.min(1, dt * 9);
 
@@ -119,6 +161,8 @@ function updatePhysics(dt) {
   state.angularVelocity *= 0.998;
   state.angle += state.angularVelocity * dt;
 
+  if (!allowEnd) return;
+
   if (Math.abs(toDeg(state.angle)) >= dangerAngle) {
     state.result = "dropped";
     state.message = "Thrown off!";
@@ -133,6 +177,20 @@ function updatePhysics(dt) {
     state.result = "cleared";
     state.message = "Goal!";
     state.distance = goalDistance;
+  }
+}
+
+function updateDemo(dt) {
+  demoTime += dt;
+  const phase = demoTime % 3.2;
+  if (phase < 0.7 || (phase > 1.45 && phase < 2.05)) {
+    demoInput = { x: 1, y: 0, label: "RIGHT" };
+  } else {
+    demoInput = { x: 0, y: 0, label: "COAST" };
+  }
+  updatePhysics(dt, demoInput, false);
+  if (demoTime > 8.8) {
+    showStageSelect();
   }
 }
 
@@ -533,6 +591,67 @@ function drawResult() {
   ctx.textAlign = "left";
 }
 
+function setScreen(nextScreen) {
+  appScreen = nextScreen;
+  startScreen.classList.toggle("hidden", nextScreen !== "start");
+  stageScreen.classList.toggle("hidden", nextScreen !== "stage");
+  tutorialScreen.classList.toggle("hidden", nextScreen !== "tutorial");
+  demoLabel.classList.toggle("hidden", nextScreen !== "demo");
+  shell.classList.toggle("menu-mode", ["start", "stage", "tutorial"].includes(nextScreen));
+  shell.classList.toggle("demo-mode", nextScreen === "demo");
+  shell.classList.toggle("play-mode", nextScreen === "game");
+}
+
+function showTitle() {
+  setScreen("start");
+}
+
+function showStageSelect() {
+  setScreen("stage");
+}
+
+function startGame() {
+  reset();
+  setScreen("game");
+}
+
+function startTutorial() {
+  storyIndex = 0;
+  renderStory();
+  setScreen("tutorial");
+}
+
+function renderStory() {
+  const scene = tutorialScenes[storyIndex];
+  storyTitle.textContent = scene.title;
+  storyText.textContent = scene.text;
+  storyVisual.className = `story-visual ${scene.sceneClass}`;
+  storyVisual.innerHTML = `<span class="rope"></span><span class="beam"></span><span class="pulse">${scene.accent}</span>`;
+  storyNextButton.textContent = storyIndex === tutorialScenes.length - 1 ? "見本を見る" : "次へ";
+}
+
+function startDemo() {
+  reset();
+  demoTime = 0;
+  demoInput = { x: 0, y: 0, label: "COAST" };
+  setScreen("demo");
+}
+
+function buildStageGrid() {
+  stageGrid.innerHTML = "";
+  for (let i = 1; i <= 20; i += 1) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = `ステージ${i}`;
+    if (i === 1) {
+      button.addEventListener("click", startGame);
+    } else {
+      button.disabled = true;
+    }
+    stageGrid.append(button);
+  }
+}
+
 function bindDirection(button, direction) {
   const start = (event) => {
     event.preventDefault();
@@ -552,7 +671,18 @@ bindDirection(leftBtn, "left");
 bindDirection(rightBtn, "right");
 bindDirection(upBtn, "up");
 bindDirection(downBtn, "down");
-restartBtn.addEventListener("click", reset);
+restartBtn.addEventListener("click", startGame);
+tutorialButton.addEventListener("click", startTutorial);
+stageButton.addEventListener("click", showStageSelect);
+stageBackButton.addEventListener("click", showTitle);
+storyNextButton.addEventListener("click", () => {
+  storyIndex += 1;
+  if (storyIndex >= tutorialScenes.length) {
+    startDemo();
+  } else {
+    renderStory();
+  }
+});
 
 window.addEventListener("keydown", (event) => {
   if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(event.key)) event.preventDefault();
@@ -560,5 +690,7 @@ window.addEventListener("keydown", (event) => {
 });
 window.addEventListener("keyup", (event) => state.keys.delete(event.key));
 
+buildStageGrid();
 reset();
+setScreen("start");
 requestAnimationFrame(step);
