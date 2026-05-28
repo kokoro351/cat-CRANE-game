@@ -640,8 +640,8 @@ function simulateReplayProfile(profile) {
 
 function replayProfilesForStage() {
   const base = [
-    { speed: 30, lookAhead: 300, heightTolerance: 28, gateMargin: 42, maxTime: 180, notch: true, notchAngle: -0.08, notchVelocity: -0.18 },
-    { speed: 24, lookAhead: 360, heightTolerance: 24, gateMargin: 54, maxTime: 220, notch: true, notchAngle: -0.12, notchVelocity: -0.28 },
+    { speed: 30, lookAhead: 300, heightTolerance: 28, gateMargin: 42, maxTime: 180, notch: true, notchAngle: -0.08, notchVelocity: -0.18, startDelay: 1.2 },
+    { speed: 24, lookAhead: 360, heightTolerance: 24, gateMargin: 54, maxTime: 220, notch: true, notchAngle: -0.12, notchVelocity: -0.28, startDelay: 1.8 },
     { speed: 42, lookAhead: 260, heightTolerance: 26, gateMargin: 36, maxTime: 120 },
     { speed: 34, lookAhead: 320, heightTolerance: 22, gateMargin: 48, maxTime: 150 },
     { speed: 26, lookAhead: 380, heightTolerance: 18, gateMargin: 60, maxTime: 180 },
@@ -649,8 +649,8 @@ function replayProfilesForStage() {
   ];
   if (currentStageIndex === 4) {
     return [
-      { speed: 78, lookAhead: 360, heightTolerance: 34, gateMargin: 60, maxTime: 120, notch: true, notchAngle: -0.08, notchVelocity: -0.18 },
-      { speed: 68, lookAhead: 400, heightTolerance: 30, gateMargin: 70, maxTime: 150, notch: true, notchAngle: -0.12, notchVelocity: -0.28 },
+      { speed: 78, lookAhead: 360, heightTolerance: 34, gateMargin: 60, maxTime: 120, notch: true, notchAngle: -0.08, notchVelocity: -0.18, startDelay: 1.2 },
+      { speed: 68, lookAhead: 400, heightTolerance: 30, gateMargin: 70, maxTime: 150, notch: true, notchAngle: -0.12, notchVelocity: -0.28, startDelay: 1.8 },
       { speed: 128, lookAhead: 330, heightTolerance: 44, gateMargin: 54, maxTime: 70 },
       { speed: 122, lookAhead: 360, heightTolerance: 38, gateMargin: 64, maxTime: 85 },
       { speed: 116, lookAhead: 300, heightTolerance: 34, gateMargin: 72, maxTime: 95 },
@@ -666,6 +666,7 @@ function replayProfilesForStage() {
 
 function referenceReplayInput(profile) {
   if (profile.excavator) return referenceExcavatorInput();
+  if (profile.startDelay && state.stageTime < profile.startDelay) return labeledInput(0, 0);
   const targetRope = demoRopeTarget(state.distance + profile.lookAhead);
   const ropeError = targetRope - state.ropeLength;
   const y = ropeError > profile.heightTolerance ? 1 : ropeError < -profile.heightTolerance ? -1 : 0;
