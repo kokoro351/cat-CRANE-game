@@ -94,7 +94,7 @@ const stages = [
     obstacles: [{ x: 1080, y: 246, w: 160, h: 48 }],
     gates: [{ x: 1760, w: 34, gapY: 352, gap: 142, phase: 0.7, speed: 2.0 }],
     machines: [
-      { kind: "forklift", startX: -520, y: 150, w: 330, h: 388, speed: 92, maxX: 2920 },
+      { kind: "forklift", startX: -760, y: 150, w: 330, h: 388, speed: 64, maxX: 2920 },
     ],
   },
   {
