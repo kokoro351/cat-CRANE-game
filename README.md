@@ -6,7 +6,7 @@ A small mobile-first browser game about smooth crane operation. A helmeted cat s
 
 Open `index.html` in a browser, or publish the repository with GitHub Pages.
 
-The title screen offers a notch-operation tutorial and stage select. Stage 1 is currently playable, while stages 2-20 are placeholders for future production.
+The title screen offers a notch-operation tutorial and stage select. The game currently uses 10 playable stages.
 
 The crane starts with a steel beam already hanging from the hook. Press a direction only while you want the crane to move that way, then release to coast. Keep the load steady while moving right toward a faraway goal. The camera follows the trolley through a factory and port-side backdrop. If the swing angle becomes too large, the steel beam and cat are thrown off and the run is over.
 
