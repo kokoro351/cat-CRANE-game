@@ -61,9 +61,9 @@ const stages = [
     name: "ステージ2",
     distance: 2400,
     obstacles: [
-      { x: 620, y: 244, w: 128, h: 46 },
-      { x: 1050, y: 394, w: 138, h: 48 },
-      { x: 1530, y: 258, w: 132, h: 50 },
+      { x: 640, y: 218, w: 104, h: 38 },
+      { x: 1080, y: 432, w: 108, h: 38 },
+      { x: 1560, y: 226, w: 104, h: 40 },
     ],
     gates: [],
   },
@@ -72,8 +72,8 @@ const stages = [
     distance: 2500,
     obstacles: [],
     gates: [
-      { x: 720, w: 34, gapY: 355, gap: 142, phase: 0, speed: 1.8 },
-      { x: 1420, w: 34, gapY: 318, gap: 132, phase: 1.2, speed: 1.9 },
+      { x: 720, w: 34, gapY: 355, gap: 188, phase: 0, speed: 1.2 },
+      { x: 1420, w: 34, gapY: 318, gap: 178, phase: 1.2, speed: 1.25 },
     ],
   },
   {
@@ -582,13 +582,15 @@ function updateStageClearDemo(dt) {
 }
 
 function demoLookAhead() {
+  if (currentStageIndex === 1) return Math.max(240, Math.min(360, 230 + state.speed * 2.0));
+  if (currentStageIndex === 2) return Math.max(190, Math.min(300, 180 + state.speed * 1.8));
   return Math.max(120, Math.min(230, 130 + state.speed * 1.5));
 }
 
 function demoHorizontalInput(ropeError) {
   if (state.distance >= goalDistance) return 0;
-  const desiredSpeed = currentStageIndex === 4 ? 108 : currentStageIndex >= 5 ? 52 : 42;
-  const mustAdjustHeight = Math.abs(ropeError) > 46;
+  const desiredSpeed = currentStageIndex === 1 ? 34 : currentStageIndex === 4 ? 108 : currentStageIndex >= 5 ? 52 : 42;
+  const mustAdjustHeight = Math.abs(ropeError) > (currentStageIndex === 2 ? 70 : currentStageIndex === 1 ? 32 : 46);
   const shouldWait = demoShouldWaitForHazard();
 
   if (shouldWait || mustAdjustHeight) {
@@ -608,7 +610,7 @@ function demoShouldWaitForHazard() {
     if (gateIsOpen(gate)) return false;
     if (gate.x < load.x + 80 || gate.x > checkX) return false;
     const gapY = gateGapY(gate);
-    const gap = gateClearance(gate) - 24;
+    const gap = gateClearance(gate) - (currentStageIndex === 2 ? 60 : 24);
     return load.y < gapY - gap / 2 || load.y > gapY + gap / 2;
   });
   if (closedGate) return true;
@@ -679,7 +681,9 @@ function updateStageDemoLabel(label, force = false) {
 
 function completeAutoClearIfNeeded() {
   if (!stageDemoAutoClear) return false;
-  if (state.distance < goalDistance && demoTime < 90 && stageDemoRecoveries < 12) return false;
+  const autoTimeLimit = currentStageIndex === 1 ? 35 : currentStageIndex === 2 ? 35 : 90;
+  const autoRecoveryLimit = currentStageIndex === 1 ? 5 : currentStageIndex === 2 ? 5 : 12;
+  if (state.distance < goalDistance && demoTime < autoTimeLimit && stageDemoRecoveries < autoRecoveryLimit) return false;
   markStageCleared(currentStageIndex + 1);
   state.distance = goalDistance;
   state.speed = 0;
