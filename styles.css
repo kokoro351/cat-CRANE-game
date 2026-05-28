@@ -446,7 +446,14 @@ button:active {
   color: var(--ink);
 }
 
-.result-actions .demo-watch.hidden {
+.result-actions .auto-clear {
+  grid-column: 1 / -1;
+  background: #159a9c;
+  color: #fff;
+}
+
+.result-actions .demo-watch.hidden,
+.result-actions .auto-clear.hidden {
   display: none;
 }
 

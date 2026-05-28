@@ -33,6 +33,7 @@ const resultText = document.querySelector("#result-text");
 const resultRestartBtn = document.querySelector("#result-restart");
 const resultStageBtn = document.querySelector("#result-stage");
 const resultDemoBtn = document.querySelector("#result-demo");
+const resultAutoBtn = document.querySelector("#result-auto");
 const beamCatSprite = new Image();
 beamCatSprite.src = "assets/cat-beam-anime.png";
 
@@ -362,6 +363,7 @@ let demoInput = { x: 0, y: 0, label: "COAST" };
 let stageDemoLabelKey = "";
 let stageDemoLabelUntil = 0;
 let stageDemoRecoveries = 0;
+let stageDemoAutoClear = false;
 
 function reset() {
   goalDistance = currentStage.distance;
@@ -568,10 +570,12 @@ function updateStageClearDemo(dt) {
   recoverStageDemoIfInvalid();
   state.angle *= Math.max(0, 1 - dt * 2.8);
   state.angularVelocity *= Math.max(0, 1 - dt * 4.2);
+  if (completeAutoClearIfNeeded()) return;
 
   if (state.distance >= goalDistance && demoTime > 1.1) {
     state.distance = goalDistance;
     state.speed = 0;
+    if (stageDemoAutoClear) markStageCleared(currentStageIndex + 1);
     demoInput = { x: 0, y: 0, label: "COAST" };
     showStageSelect();
   }
@@ -642,10 +646,12 @@ function updateStage4ClearDemo(dt) {
   recoverStageDemoIfInvalid();
   state.angle *= Math.max(0, 1 - dt * 3.2);
   state.angularVelocity *= Math.max(0, 1 - dt * 4.8);
+  if (completeAutoClearIfNeeded()) return;
 
   if (state.distance >= goalDistance && demoTime > 1.1) {
     state.distance = goalDistance;
     state.speed = 0;
+    if (stageDemoAutoClear) markStageCleared(currentStageIndex + 1);
     demoInput = { x: 0, y: 0, label: "COAST" };
     showStageSelect();
   }
@@ -669,6 +675,17 @@ function updateStageDemoLabel(label, force = false) {
   stageDemoLabelKey = label;
   stageDemoLabelUntil = demoTime + 2.8;
   demoLabel.textContent = stageDemoInstruction(label);
+}
+
+function completeAutoClearIfNeeded() {
+  if (!stageDemoAutoClear) return false;
+  if (state.distance < goalDistance && demoTime < 90 && stageDemoRecoveries < 12) return false;
+  markStageCleared(currentStageIndex + 1);
+  state.distance = goalDistance;
+  state.speed = 0;
+  demoInput = { x: 0, y: 0, label: "COAST" };
+  showStageSelect();
+  return true;
 }
 
 function stageDemoInstruction(label) {
@@ -1539,6 +1556,7 @@ function syncResultPanel() {
   const visible = appScreen === "game" && state.result !== "running";
   resultPanel.classList.toggle("hidden", !visible);
   resultDemoBtn.classList.toggle("hidden", !visible || state.result !== "dropped");
+  resultAutoBtn.classList.toggle("hidden", !visible || state.result !== "dropped");
   if (!visible) return;
   resultTitle.textContent = state.message;
   resultText.textContent = resultDetailText();
@@ -1592,6 +1610,7 @@ function setScreen(nextScreen) {
   shell.classList.toggle("demo-mode", nextScreen === "demo");
   shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo");
   resultPanel.classList.add("hidden");
+  if (nextScreen !== "stageDemo") stageDemoAutoClear = false;
   if (nextScreen !== "demo" && nextScreen !== "stageDemo") {
     buttonCue.className = "button-cue hidden";
     buttonCue.textContent = "";
@@ -1623,13 +1642,24 @@ function startGame(stageNumber = currentStageIndex + 1) {
 }
 
 function startStageClearDemo() {
+  startStageDemo(false);
+}
+
+function startStageAutoClear() {
+  startStageDemo(true);
+}
+
+function startStageDemo(autoClear) {
   reset();
   demoTime = 0;
   demoInput = { x: 0, y: 0, label: "COAST" };
   stageDemoLabelKey = "";
   stageDemoLabelUntil = 0;
   stageDemoRecoveries = 0;
-  demoLabel.textContent = `見本プレイ: ${currentStage.name} 右・上・下の操作タイミング`;
+  stageDemoAutoClear = autoClear;
+  demoLabel.textContent = autoClear
+    ? `オートモード: ${currentStage.name} クリアまで自動運転`
+    : `見本プレイ: ${currentStage.name} 右・上・下の操作タイミング`;
   setScreen("stageDemo");
 }
 
@@ -1754,6 +1784,7 @@ bindMenuAction(stageMenuBtn, showStageSelect);
 bindMenuAction(resultRestartBtn, () => startGame());
 bindMenuAction(resultStageBtn, showStageSelect);
 bindMenuAction(resultDemoBtn, startStageClearDemo);
+bindMenuAction(resultAutoBtn, startStageAutoClear);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
 stageBackButton.addEventListener("click", showTitle);
