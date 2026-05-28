@@ -55,6 +55,7 @@ const beamSpriteWidth = 96;
 const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
 const obstacleHeightScale = 0.72;
 const gateGapBonus = 78;
+const pendulumReturnScale = 0.76;
 const stages = [
   { name: "ステージ1", distance: 2200, obstacles: [], gates: [] },
   {
@@ -461,7 +462,7 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
   const gravity = 9.8;
   const lengthMeters = state.ropeLength / 58;
   const trolleyAccel = state.accel / 26;
-  const pendulumForce = -(gravity / lengthMeters) * Math.sin(state.angle - windCenter) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
+  const pendulumForce = -(gravity * pendulumReturnScale / lengthMeters) * Math.sin(state.angle - windCenter) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
   state.angularVelocity += pendulumForce * dt;
   state.angularVelocity *= 0.998;
   state.angle += state.angularVelocity * dt;
@@ -630,6 +631,7 @@ function replayProfilesForStage() {
     { speed: 42, lookAhead: 260, heightTolerance: 26, gateMargin: 36, maxTime: 120 },
     { speed: 34, lookAhead: 320, heightTolerance: 22, gateMargin: 48, maxTime: 150 },
     { speed: 26, lookAhead: 380, heightTolerance: 18, gateMargin: 60, maxTime: 180 },
+    { speed: 20, lookAhead: 420, heightTolerance: 16, gateMargin: 70, maxTime: 240 },
   ];
   if (currentStageIndex === 4) {
     return [
