@@ -359,6 +359,9 @@ let appScreen = "start";
 let storyIndex = 0;
 let demoTime = 0;
 let demoInput = { x: 0, y: 0, label: "COAST" };
+let stageDemoLabelKey = "";
+let stageDemoLabelUntil = 0;
+let stageDemoRecoveries = 0;
 
 function reset() {
   goalDistance = currentStage.distance;
@@ -560,9 +563,9 @@ function updateStageClearDemo(dt) {
   const label = y < 0 ? "UP" : y > 0 ? "DOWN" : x > 0 ? "RIGHT" : x < 0 ? "LEFT" : "COAST";
 
   demoInput = { x, y, label };
-  demoLabel.textContent = stageDemoInstruction(label);
+  updateStageDemoLabel(label);
   updatePhysics(dt, demoInput, false);
-  if (restartStageDemoIfInvalid()) return;
+  recoverStageDemoIfInvalid();
   state.angle *= Math.max(0, 1 - dt * 2.8);
   state.angularVelocity *= Math.max(0, 1 - dt * 4.2);
 
@@ -634,9 +637,9 @@ function updateStage4ClearDemo(dt) {
 
   const label = x < 0 ? "LEFT" : x > 0 ? "RIGHT" : "COAST";
   demoInput = { x, y: 0, label };
-  demoLabel.textContent = stageDemoInstruction(label);
+  updateStageDemoLabel(label);
   updatePhysics(dt, demoInput, false);
-  if (restartStageDemoIfInvalid()) return;
+  recoverStageDemoIfInvalid();
   state.angle *= Math.max(0, 1 - dt * 3.2);
   state.angularVelocity *= Math.max(0, 1 - dt * 4.8);
 
@@ -648,19 +651,29 @@ function updateStage4ClearDemo(dt) {
   }
 }
 
-function restartStageDemoIfInvalid() {
-  if (Math.abs(toDeg(state.angle)) >= dangerAngle || hitStageHazard()) {
-    reset();
-    demoTime = 0;
-    demoInput = { x: 0, y: 0, label: "COAST" };
-    demoLabel.textContent = `見本プレイ: ${currentStage.name}  接触したためやり直し`;
-    return true;
-  }
-  return false;
+function recoverStageDemoIfInvalid() {
+  if (Math.abs(toDeg(state.angle)) < dangerAngle && !hitStageHazard()) return;
+  stageDemoRecoveries += 1;
+  state.distance = Math.max(0, state.distance - 34);
+  state.speed = Math.min(8, Math.max(-10, state.speed * -0.2));
+  state.accel = 0;
+  state.ropeLength = Math.max(minRopeLength + 8, Math.min(maxRopeLength - 8, state.ropeLength - 34));
+  state.angle *= 0.35;
+  state.angularVelocity = 0;
+  updateStageDemoLabel("RECOVER", true);
+}
+
+function updateStageDemoLabel(label, force = false) {
+  if (!force && label === stageDemoLabelKey && demoTime < stageDemoLabelUntil) return;
+  if (!force && label !== stageDemoLabelKey && demoTime < stageDemoLabelUntil) return;
+  stageDemoLabelKey = label;
+  stageDemoLabelUntil = demoTime + 2.8;
+  demoLabel.textContent = stageDemoInstruction(label);
 }
 
 function stageDemoInstruction(label) {
   const prefix = `見本プレイ: ${currentStage.name}`;
+  if (label === "RECOVER") return `${prefix}  速度を落として姿勢を立て直す`;
   if (label === "LEFT") return `${prefix}  ←で下がって重機を待つ`;
   if (label === "UP") return `${prefix}  ↑で巻き上げて避ける`;
   if (label === "DOWN") return `${prefix}  ↓で下げて通過高さへ`;
@@ -1613,6 +1626,9 @@ function startStageClearDemo() {
   reset();
   demoTime = 0;
   demoInput = { x: 0, y: 0, label: "COAST" };
+  stageDemoLabelKey = "";
+  stageDemoLabelUntil = 0;
+  stageDemoRecoveries = 0;
   demoLabel.textContent = `見本プレイ: ${currentStage.name} 右・上・下の操作タイミング`;
   setScreen("stageDemo");
 }
