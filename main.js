@@ -58,6 +58,11 @@ const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
 const obstacleHeightScale = 0.72;
 const gateGapBonus = 78;
 const pendulumReturnScale = 0.70;
+const driveAccelPower = 110;
+const driveAccelResponse = 24;
+const driveCoastBrake = 16;
+const maxForwardSpeed = 112;
+const trolleyAccelDivisor = 40;
 const stages = [
   { name: "ステージ1", distance: 1600, obstacles: [], gates: [] },
   {
@@ -455,11 +460,13 @@ function step(now) {
 
 function updatePhysics(dt, input = readInput(), allowEnd = true) {
   const windCenter = currentStage.windCenter || 0;
-  const targetAccel = input.x !== 0 ? input.x * 88 : state.speed === 0 ? 0 : -Math.sign(state.speed) * 22;
-  state.accel += (targetAccel - state.accel) * Math.min(1, dt * 9);
+  const targetAccel = input.x !== 0 ? input.x * driveAccelPower : state.speed === 0 ? 0 : -Math.sign(state.speed) * driveCoastBrake;
+  state.accel += (targetAccel - state.accel) * Math.min(1, dt * driveAccelResponse);
 
-  state.speed = Math.max(-58, Math.min(132, state.speed + state.accel * dt));
+  const previousSpeed = state.speed;
+  state.speed = Math.max(-58, Math.min(maxForwardSpeed, state.speed + state.accel * dt));
   if (input.x === 0 && Math.abs(state.speed) < 2) state.speed = 0;
+  const actualTrolleyAccel = (state.speed - previousSpeed) / Math.max(dt, 0.0001);
   const windDrift = input.x === 0 && windCenter ? Math.sign(windCenter) * 10 : 0;
   state.distance = Math.max(0, Math.min(goalDistance, state.distance + (state.speed + windDrift) * dt));
 
@@ -467,7 +474,7 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
 
   const gravity = 9.8;
   const lengthMeters = state.ropeLength / 58;
-  const trolleyAccel = state.accel / 26;
+  const trolleyAccel = actualTrolleyAccel / trolleyAccelDivisor;
   const pendulumForce = -(gravity * pendulumReturnScale / lengthMeters) * Math.sin(state.angle - windCenter) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
   state.angularVelocity += pendulumForce * dt;
   state.angularVelocity *= 0.998;
@@ -542,15 +549,15 @@ function updateForklift(machine, dt) {
 
 function updateDemo(dt) {
   demoTime += dt;
-  if (demoTime > 0.5 && demoTime < 1.02) {
+  if (demoTime > 0.5 && demoTime < 0.92) {
     demoInput = { x: 1, y: 0, label: "RIGHT" };
-  } else if (demoTime > 1.95 && demoTime < 8.4) {
-    demoInput = { x: 0.72, y: 0, label: "RIGHT" };
+  } else if (demoTime > 2.05 && demoTime < 8.4) {
+    demoInput = { x: 1, y: 0, label: "RIGHT" };
   } else {
     demoInput = { x: 0, y: 0, label: "COAST" };
   }
   updatePhysics(dt, demoInput, false);
-  if (demoTime > 2.06) {
+  if (demoTime > 2.16) {
     const angleDamping = demoTime < 3.35 ? 4.8 : 1.35;
     const velocityDamping = demoTime < 3.35 ? 7.2 : 2.1;
     state.angle *= Math.max(0, 1 - dt * angleDamping);
@@ -651,9 +658,9 @@ function replayProfilesForStage() {
     return [
       { speed: 78, lookAhead: 360, heightTolerance: 34, gateMargin: 60, maxTime: 120, notch: true, notchAngle: -0.08, notchVelocity: -0.18, startDelay: 1.2 },
       { speed: 68, lookAhead: 400, heightTolerance: 30, gateMargin: 70, maxTime: 150, notch: true, notchAngle: -0.12, notchVelocity: -0.28, startDelay: 1.8 },
-      { speed: 128, lookAhead: 330, heightTolerance: 44, gateMargin: 54, maxTime: 70 },
-      { speed: 122, lookAhead: 360, heightTolerance: 38, gateMargin: 64, maxTime: 85 },
-      { speed: 116, lookAhead: 300, heightTolerance: 34, gateMargin: 72, maxTime: 95 },
+      { speed: 108, lookAhead: 330, heightTolerance: 44, gateMargin: 54, maxTime: 80 },
+      { speed: 100, lookAhead: 360, heightTolerance: 38, gateMargin: 64, maxTime: 95 },
+      { speed: 92, lookAhead: 300, heightTolerance: 34, gateMargin: 72, maxTime: 110 },
     ];
   }
   if (currentStageIndex === 3) {
@@ -1680,7 +1687,7 @@ function syncResultPanel() {
 }
 
 function drawDemoCue() {
-  if (appScreen !== "demo" || demoTime < 2.15 || demoTime > 3.45) return;
+  if (appScreen !== "demo" || demoTime < 2.22 || demoTime > 3.45) return;
   const load = loadPosition();
   drawSpeechBubble(load.x + 48, load.y - 72, "ピタッ");
 }
@@ -2018,10 +2025,10 @@ function syncButtonStates() {
 
 function syncDemoCues() {
   if (appScreen !== "demo") return;
-  if (demoTime > 0.5 && demoTime < 1.02) {
+  if (demoTime > 0.5 && demoTime < 0.92) {
     buttonCue.textContent = "チョン押し";
     buttonCue.className = "button-cue tap";
-  } else if (demoTime > 1.86 && demoTime < 4.0) {
+  } else if (demoTime > 1.96 && demoTime < 4.0) {
     buttonCue.textContent = "長押し";
     buttonCue.className = "button-cue hold";
   } else {
