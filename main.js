@@ -638,6 +638,8 @@ function simulateReplayProfile(profile) {
 
 function replayProfilesForStage() {
   const base = [
+    { speed: 82, lookAhead: 300, heightTolerance: 30, gateMargin: 48, maxTime: 90, notchStyle: "tapHold", tapStart: 0.45, tapEnd: 0.86, holdStart: 1.72, holdUntil: 5.7 },
+    { speed: 68, lookAhead: 340, heightTolerance: 26, gateMargin: 58, maxTime: 110, notchStyle: "tapHold", tapStart: 0.45, tapEnd: 0.84, holdStart: 1.82, holdUntil: 5.4 },
     { speed: 30, lookAhead: 300, heightTolerance: 28, gateMargin: 42, maxTime: 180, notch: true, notchAngle: -0.08, notchVelocity: -0.18, startDelay: 1.2 },
     { speed: 24, lookAhead: 360, heightTolerance: 24, gateMargin: 54, maxTime: 220, notch: true, notchAngle: -0.12, notchVelocity: -0.28, startDelay: 1.8 },
     { speed: 18, lookAhead: 260, heightTolerance: 18, gateMargin: 70, maxTime: 280, notch: true, notchAngle: -0.10, notchVelocity: -0.24, startDelay: 1.5 },
@@ -648,6 +650,7 @@ function replayProfilesForStage() {
   ];
   if (currentStageIndex === 4) {
     return [
+      { speed: 92, lookAhead: 360, heightTolerance: 40, gateMargin: 66, maxTime: 70, notchStyle: "tapHold", tapStart: 0.45, tapEnd: 0.84, holdStart: 1.72, holdUntil: 5.5 },
       { speed: 78, lookAhead: 360, heightTolerance: 34, gateMargin: 60, maxTime: 120, notch: true, notchAngle: -0.08, notchVelocity: -0.18, startDelay: 1.2 },
       { speed: 68, lookAhead: 400, heightTolerance: 30, gateMargin: 70, maxTime: 150, notch: true, notchAngle: -0.12, notchVelocity: -0.28, startDelay: 1.8 },
       { speed: 108, lookAhead: 330, heightTolerance: 44, gateMargin: 54, maxTime: 80 },
@@ -673,7 +676,9 @@ function referenceReplayInput(profile) {
   let x = 0;
 
   if (!wait && Math.abs(ropeError) <= profile.heightTolerance * 2.2) {
-    if (profile.notch && state.speed < profile.speed) {
+    if (profile.notchStyle === "tapHold") {
+      x = referenceTapHoldInput(profile);
+    } else if (profile.notch && state.speed < profile.speed) {
       x = state.angle < profile.notchAngle || state.angularVelocity > profile.notchVelocity ? 1 : 0;
     } else if (state.speed < profile.speed) x = 1;
     else if (state.speed > profile.speed + 14) x = -1;
@@ -684,6 +689,14 @@ function referenceReplayInput(profile) {
   }
 
   return labeledInput(x, y);
+}
+
+function referenceTapHoldInput(profile) {
+  const t = state.stageTime;
+  if (t >= profile.tapStart && t < profile.tapEnd) return 1;
+  if (t < profile.holdStart) return 0;
+  if (profile.holdUntil && t < profile.holdUntil) return 1;
+  return state.speed < profile.speed ? 1 : 0;
 }
 
 function referenceExcavatorInput() {
@@ -1684,7 +1697,12 @@ function syncResultPanel() {
 }
 
 function drawDemoCue() {
-  if (appScreen !== "demo" || demoTime < 2.22 || demoTime > 3.45) return;
+  const stageDemoPita =
+    appScreen === "stageDemo"
+    && stageReplayProfile?.notchStyle === "tapHold"
+    && state.stageTime > stageReplayProfile.holdStart + 0.45
+    && state.stageTime < stageReplayProfile.holdStart + 1.55;
+  if ((appScreen !== "demo" || demoTime < 2.22 || demoTime > 3.45) && !stageDemoPita) return;
   const load = loadPosition();
   drawSpeechBubble(load.x + 48, load.y - 72, "ピタッ");
 }
@@ -2022,6 +2040,20 @@ function syncButtonStates() {
 }
 
 function syncDemoCues() {
+  if (appScreen === "stageDemo" && stageReplayProfile?.notchStyle === "tapHold") {
+    const t = state.stageTime;
+    if (t > stageReplayProfile.tapStart && t < stageReplayProfile.tapEnd) {
+      buttonCue.textContent = "チョン押し";
+      buttonCue.className = "button-cue tap";
+    } else if (t > stageReplayProfile.holdStart && t < stageReplayProfile.holdUntil) {
+      buttonCue.textContent = "長押し";
+      buttonCue.className = "button-cue hold";
+    } else {
+      buttonCue.className = "button-cue hidden";
+      buttonCue.textContent = "";
+    }
+    return;
+  }
   if (appScreen !== "demo") return;
   if (demoTime > 0.5 && demoTime < 0.92) {
     buttonCue.textContent = "チョン押し";
