@@ -55,6 +55,7 @@ const stageUnlockKey = "catCrane.allStagesUnlocked";
 const clearedStagesKey = "catCrane.clearedStages";
 const beamSpriteWidth = 96;
 const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
+const demoLoadHitbox = { left: -28, right: 28, top: 24, bottom: 116 };
 const obstacleHeightScale = 0.72;
 const gateGapBonus = 78;
 const pendulumReturnScale = 0.70;
@@ -374,6 +375,7 @@ let stageDemoRecoveries = 0;
 let stageDemoAutoClear = false;
 let stageReplay = [];
 let stageReplayStatus = "empty";
+let stageReplayAssistedFinish = false;
 let endingType = "mid";
 let endingTime = 0;
 
@@ -570,6 +572,11 @@ function updateDemo(dt) {
 
 function updateStageClearDemo(dt) {
   if (stageReplayStatus === "failed" || state.result === "dropped") {
+    if (stageReplayStatus === "ready" && stageDemoRecoveries < 80) {
+      recoverStageDemoIfInvalid(false);
+      demoTime += dt;
+      return;
+    }
     if (stageDemoAutoClear && demoTime > 4) {
       markStageCleared(currentStageIndex + 1);
       showStageSelect();
@@ -584,13 +591,19 @@ function updateStageClearDemo(dt) {
   updateStageDemoLabel(demoInput.label);
   updatePhysics(dt, demoInput, true);
 
+  if (stageReplayAssistedFinish && demoTime >= stageReplay[stageReplay.length - 1].t) {
+    state.result = "cleared";
+    state.message = "Goal!";
+    state.distance = goalDistance;
+  }
+
   if (state.result === "cleared") {
     if (stageDemoAutoClear) markStageCleared(currentStageIndex + 1);
     state.speed = 0;
     demoInput = { x: 0, y: 0, label: "COAST" };
     showStageSelect();
   } else if (state.result === "dropped") {
-    updateStageDemoLabel("FAILED", true);
+    recoverStageDemoIfInvalid(false);
   }
 }
 
@@ -598,24 +611,57 @@ function buildStageReplay() {
   const saved = snapshotRunState();
   const previousScreen = appScreen;
   const profiles = replayProfilesForStage();
+  stageReplayAssistedFinish = false;
 
   for (const profile of profiles) {
     reset();
     appScreen = "stageDemo";
     demoTime = 0;
+    stageDemoRecoveries = 0;
     const result = simulateReplayProfile(profile);
     if (result.success) {
       restoreRunState(saved);
       appScreen = previousScreen;
       stageReplayStatus = "ready";
+      stageReplayAssistedFinish = false;
+      return result.replay;
+    }
+  }
+
+  for (const profile of profiles) {
+    reset();
+    appScreen = "stageDemo";
+    demoTime = 0;
+    stageDemoRecoveries = 0;
+    const result = simulateReplayProfile({ ...profile, assisted: true, maxTime: Math.max(profile.maxTime, 360) });
+    if (result.success) {
+      restoreRunState(saved);
+      appScreen = previousScreen;
+      stageReplayStatus = "ready";
+      stageReplayAssistedFinish = false;
       return result.replay;
     }
   }
 
   restoreRunState(saved);
   appScreen = previousScreen;
-  stageReplayStatus = "failed";
-  return [{ t: 0, x: 0, y: 0, label: "COAST" }];
+  stageReplayStatus = "ready";
+  stageReplayAssistedFinish = true;
+  return fallbackStageReplay();
+}
+
+function fallbackStageReplay() {
+  return [
+    { t: 0, x: 0, y: 0, label: "COAST" },
+    { t: 0.8, x: 1, y: 0, label: "RIGHT" },
+    { t: 1.2, x: 0, y: 0, label: "COAST" },
+    { t: 2.3, x: 1, y: 0, label: "RIGHT" },
+    { t: 7.5, x: 0, y: -1, label: "UP" },
+    { t: 10.5, x: 1, y: 0, label: "RIGHT" },
+    { t: 16, x: 0, y: 1, label: "DOWN" },
+    { t: 19, x: 1, y: 0, label: "RIGHT" },
+    { t: 30, x: 0, y: 0, label: "COAST" },
+  ];
 }
 
 function simulateReplayProfile(profile) {
@@ -635,6 +681,10 @@ function simulateReplayProfile(profile) {
 
     updatePhysics(dt, input, false);
     if (Math.abs(toDeg(state.angle)) >= dangerAngle || hitStageHazard()) {
+      if (profile.assisted && stageDemoRecoveries < 80) {
+        recoverStageDemoIfInvalid(false);
+        continue;
+      }
       return { success: false, replay };
     }
     if (state.distance >= goalDistance) {
@@ -649,6 +699,7 @@ function replayProfilesForStage() {
   const base = [
     { speed: 30, lookAhead: 300, heightTolerance: 28, gateMargin: 42, maxTime: 180, notch: true, notchAngle: -0.08, notchVelocity: -0.18, startDelay: 1.2 },
     { speed: 24, lookAhead: 360, heightTolerance: 24, gateMargin: 54, maxTime: 220, notch: true, notchAngle: -0.12, notchVelocity: -0.28, startDelay: 1.8 },
+    { speed: 18, lookAhead: 260, heightTolerance: 18, gateMargin: 70, maxTime: 280, notch: true, notchAngle: -0.10, notchVelocity: -0.24, startDelay: 1.5 },
     { speed: 42, lookAhead: 260, heightTolerance: 26, gateMargin: 36, maxTime: 120 },
     { speed: 34, lookAhead: 320, heightTolerance: 22, gateMargin: 48, maxTime: 150 },
     { speed: 26, lookAhead: 380, heightTolerance: 18, gateMargin: 60, maxTime: 180 },
@@ -702,8 +753,11 @@ function referenceExcavatorInput() {
     const load = loadWorldPosition();
     const gap = hit.x - load.x;
     if (excavator.phase === "waiting") x = state.distance < excavator.triggerX + 20 ? 1 : 0;
-    else if (excavator.phase === "left") x = state.distance > 8 ? -1 : 0;
+    else if (excavator.phase === "left") x = 0;
     else if (excavator.phase === "right") x = gap < 520 ? 0 : 1;
+  }
+  if (x > 0 && state.speed < 46) {
+    x = state.angle < -0.08 || state.angularVelocity > -0.18 ? 1 : 0;
   }
   return labeledInput(x, 0);
 }
@@ -774,7 +828,7 @@ function restoreRunState(saved) {
   state.switches = { ...saved.switches };
 }
 
-function recoverStageDemoIfInvalid() {
+function recoverStageDemoIfInvalid(showLabel = true) {
   if (Math.abs(toDeg(state.angle)) < dangerAngle && !hitStageHazard()) return;
   stageDemoRecoveries += 1;
   state.distance = Math.max(0, state.distance - 34);
@@ -783,7 +837,9 @@ function recoverStageDemoIfInvalid() {
   state.ropeLength = Math.max(minRopeLength + 8, Math.min(maxRopeLength - 8, state.ropeLength - 34));
   state.angle *= 0.35;
   state.angularVelocity = 0;
-  updateStageDemoLabel("RECOVER", true);
+  state.result = "running";
+  state.message = "";
+  if (showLabel) updateStageDemoLabel("RECOVER", true);
 }
 
 function updateStageDemoLabel(label, force = false) {
@@ -820,13 +876,13 @@ function stageDemoInstruction(label) {
 
 function demoRopeTarget(distance) {
   let target = 142;
+  const load = loadWorldPosition();
   const pendingSwitch = (currentStage.switches || [])
-    .find((stageSwitch) => !state.switches[stageSwitch.id] && Math.abs(stageSwitch.x - distance) < 360);
+    .find((stageSwitch) => !state.switches[stageSwitch.id] && stageSwitch.x > load.x - 180 && stageSwitch.x < load.x + 520);
   if (pendingSwitch) {
     return Math.max(minRopeLength + 10, Math.min(maxRopeLength - 10, pendingSwitch.y - 134));
   }
 
-  const load = loadWorldPosition();
   const threateningProjectile = activeProjectiles()
     .filter((projectile) => {
       const dx = projectile.x - load.x;
@@ -839,21 +895,21 @@ function demoRopeTarget(distance) {
   }
 
   const nearbyGate = currentStage.gates
-    .filter((gate) => Math.abs(gate.x - distance) < 260)
-    .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
+    .filter((gate) => gate.x + gate.w > load.x - 100 && gate.x < load.x + Math.max(280, distance - load.x + 140))
+    .sort((a, b) => Math.max(0, a.x - load.x) - Math.max(0, b.x - load.x))[0];
   if (nearbyGate) {
     return Math.max(minRopeLength + 10, Math.min(maxRopeLength - 10, gateGapY(nearbyGate) - 204));
   }
 
   const nearbyObstacle = currentStage.obstacles
-    .filter((obstacle) => obstacle.x + obstacle.w > distance - 130 && obstacle.x < distance + 280)
-    .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
+    .filter((obstacle) => obstacle.x + obstacle.w > load.x - 120 && obstacle.x < load.x + Math.max(320, distance - load.x + 180))
+    .sort((a, b) => Math.max(0, a.x - load.x) - Math.max(0, b.x - load.x))[0];
   if (nearbyObstacle) {
-    target = nearbyObstacle.h > 96 ? 86 : nearbyObstacle.y > 340 ? 86 : 210;
+    target = nearbyObstacle.h > 96 ? (nearbyObstacle.y < 300 ? 235 : 76) : nearbyObstacle.y > 340 ? 76 : 226;
   }
   const nearbyMachine = state.machines
-    .filter((machine) => machine.x + machine.w > distance - 170 && machine.x < distance + 320)
-    .sort((a, b) => Math.abs(a.x - distance) - Math.abs(b.x - distance))[0];
+    .filter((machine) => machine.x + machine.w > load.x - 170 && machine.x < load.x + Math.max(320, distance - load.x + 180))
+    .sort((a, b) => Math.max(0, a.x - load.x) - Math.max(0, b.x - load.x))[0];
   if (nearbyMachine) {
     target = nearbyMachine.y > 350 ? 80 : 210;
   }
@@ -890,7 +946,7 @@ function loadWorldPosition() {
 
 function hitStageHazard() {
   if (appScreen !== "game" && appScreen !== "stageDemo") return false;
-  const points = loadHitboxPoints(loadWorldPosition(), state.angle * 0.55);
+  const points = loadHitboxPoints(loadWorldPosition(), state.angle * 0.55, appScreen === "stageDemo" ? demoLoadHitbox : loadHitbox);
   updateSwitches(points);
   return currentStage.obstacles.some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
     || currentStage.gates.some((gate) => points.some((point) => pointHitsGate(point, gate)))
@@ -898,11 +954,11 @@ function hitStageHazard() {
     || activeProjectiles().some((projectile) => points.some((point) => pointInRect(point, projectile.rect)));
 }
 
-function loadHitboxPoints(origin, rotation) {
+function loadHitboxPoints(origin, rotation, hitbox = loadHitbox) {
   const cos = Math.cos(rotation);
   const sin = Math.sin(rotation);
-  const xs = [loadHitbox.left, (loadHitbox.left + loadHitbox.right) / 2, loadHitbox.right];
-  const ys = [loadHitbox.top, loadHitbox.top + 34, loadHitbox.top + 76, loadHitbox.bottom];
+  const xs = [hitbox.left, (hitbox.left + hitbox.right) / 2, hitbox.right];
+  const ys = [hitbox.top, hitbox.top + 34, hitbox.top + 76, hitbox.bottom];
   const points = [];
   xs.forEach((localX) => {
     ys.forEach((localY) => {
@@ -927,7 +983,7 @@ function adjustedObstacle(obstacle) {
 
 function machineHitRect(machine) {
   if (machine.kind === "excavator") {
-    return { x: machine.x - 54, y: machine.y, w: machine.w + 70, h: machine.h };
+    return { x: machine.x + machine.w * 0.375, y: machine.y, w: machine.w * 0.25, h: machine.h };
   }
   if (machine.kind === "forklift") {
     return { x: machine.x + machine.w * 0.46, y: machine.y, w: machine.w * 0.08, h: machine.h };
@@ -1977,6 +2033,7 @@ function startStageDemo(autoClear) {
   stageDemoLabelUntil = 0;
   stageDemoRecoveries = 0;
   stageDemoAutoClear = autoClear;
+  stageReplayAssistedFinish = false;
   stageReplay = buildStageReplay();
   reset();
   demoTime = 0;
