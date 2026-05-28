@@ -649,8 +649,9 @@ function replayProfilesForStage() {
   ];
   if (currentStageIndex === 4) {
     return [
-      { speed: 116, lookAhead: 260, heightTolerance: 34, gateMargin: 36, maxTime: 80 },
-      { speed: 104, lookAhead: 300, heightTolerance: 28, gateMargin: 44, maxTime: 95 },
+      { speed: 128, lookAhead: 330, heightTolerance: 44, gateMargin: 54, maxTime: 70 },
+      { speed: 122, lookAhead: 360, heightTolerance: 38, gateMargin: 64, maxTime: 85 },
+      { speed: 116, lookAhead: 300, heightTolerance: 34, gateMargin: 72, maxTime: 95 },
     ];
   }
   if (currentStageIndex === 3) {
