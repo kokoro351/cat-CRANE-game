@@ -55,7 +55,7 @@ const beamSpriteWidth = 96;
 const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
 const obstacleHeightScale = 0.72;
 const gateGapBonus = 78;
-const pendulumReturnScale = 0.76;
+const pendulumReturnScale = 0.52;
 const stages = [
   { name: "ステージ1", distance: 2200, obstacles: [], gates: [] },
   {
@@ -628,6 +628,8 @@ function simulateReplayProfile(profile) {
 
 function replayProfilesForStage() {
   const base = [
+    { speed: 32, lookAhead: 300, heightTolerance: 24, gateMargin: 42, maxTime: 150, notch: true, notchAngle: -0.2, notchVelocity: -0.1 },
+    { speed: 24, lookAhead: 340, heightTolerance: 20, gateMargin: 54, maxTime: 190, notch: true, notchAngle: -0.2, notchVelocity: -0.3 },
     { speed: 42, lookAhead: 260, heightTolerance: 26, gateMargin: 36, maxTime: 120 },
     { speed: 34, lookAhead: 320, heightTolerance: 22, gateMargin: 48, maxTime: 150 },
     { speed: 26, lookAhead: 380, heightTolerance: 18, gateMargin: 60, maxTime: 180 },
@@ -656,7 +658,9 @@ function referenceReplayInput(profile) {
   let x = 0;
 
   if (!wait && Math.abs(ropeError) <= profile.heightTolerance * 2.2) {
-    if (state.speed < profile.speed) x = 1;
+    if (profile.notch && state.speed < profile.speed) {
+      x = state.angle < profile.notchAngle || state.angularVelocity > profile.notchVelocity ? 1 : 0;
+    } else if (state.speed < profile.speed) x = 1;
     else if (state.speed > profile.speed + 14) x = -1;
   } else if (state.speed > 12) {
     x = -1;
