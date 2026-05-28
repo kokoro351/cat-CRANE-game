@@ -649,6 +649,8 @@ function replayProfilesForStage() {
   ];
   if (currentStageIndex === 4) {
     return [
+      { speed: 78, lookAhead: 360, heightTolerance: 34, gateMargin: 60, maxTime: 120, notch: true, notchAngle: -0.08, notchVelocity: -0.18 },
+      { speed: 68, lookAhead: 400, heightTolerance: 30, gateMargin: 70, maxTime: 150, notch: true, notchAngle: -0.12, notchVelocity: -0.28 },
       { speed: 128, lookAhead: 330, heightTolerance: 44, gateMargin: 54, maxTime: 70 },
       { speed: 122, lookAhead: 360, heightTolerance: 38, gateMargin: 64, maxTime: 85 },
       { speed: 116, lookAhead: 300, heightTolerance: 34, gateMargin: 72, maxTime: 95 },
