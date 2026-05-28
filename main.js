@@ -34,7 +34,6 @@ const resultTitle = document.querySelector("#result-title");
 const resultText = document.querySelector("#result-text");
 const resultRestartBtn = document.querySelector("#result-restart");
 const resultStageBtn = document.querySelector("#result-stage");
-const resultDemoBtn = document.querySelector("#result-demo");
 const resultAutoBtn = document.querySelector("#result-auto");
 const beamCatSprite = new Image();
 beamCatSprite.src = "assets/cat-beam-anime.png";
@@ -425,9 +424,12 @@ function step(now) {
   } else if (appScreen === "endingMid" || appScreen === "endingFinal") {
     updateEnding(dt);
   } else if (appScreen === "stageDemo") {
-    state.stageTime += dt;
-    updateStageMachines(dt);
-    updateStageClearDemo(dt);
+    const autoSteps = stageDemoAutoClear ? 2 : 1;
+    for (let i = 0; i < autoSteps && appScreen === "stageDemo"; i += 1) {
+      state.stageTime += dt;
+      updateStageMachines(dt);
+      updateStageClearDemo(dt);
+    }
   } else if (appScreen === "game" && state.result === "running") {
     state.stageTime += dt;
     updateStageMachines(dt);
@@ -1689,7 +1691,6 @@ function resultDetailText() {
 function syncResultPanel() {
   const visible = appScreen === "game" && state.result !== "running";
   resultPanel.classList.toggle("hidden", !visible);
-  resultDemoBtn.classList.toggle("hidden", !visible || state.result !== "dropped");
   resultAutoBtn.classList.toggle("hidden", !visible || state.result !== "dropped");
   if (!visible) return;
   resultTitle.textContent = state.message;
@@ -1997,7 +1998,7 @@ function startStageDemo(autoClear) {
   reset();
   demoTime = 0;
   demoLabel.textContent = autoClear
-    ? `オートモード: ${currentStage.name} クリアまで自動運転`
+    ? `オートモード: ${currentStage.name} 2倍速で自動クリア`
     : `見本プレイ: ${currentStage.name} 右・上・下の操作タイミング`;
   setScreen("stageDemo");
 }
@@ -2144,7 +2145,6 @@ bindMenuAction(restartBtn, () => startGame());
 bindMenuAction(stageMenuBtn, showStageSelect);
 bindMenuAction(resultRestartBtn, () => startGame());
 bindMenuAction(resultStageBtn, showStageSelect);
-bindMenuAction(resultDemoBtn, startStageClearDemo);
 bindMenuAction(resultAutoBtn, startStageAutoClear);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
