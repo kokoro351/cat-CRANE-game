@@ -558,18 +558,30 @@ function updateStageClearDemo(dt) {
     updateStage4ClearDemo(dt);
     return;
   }
+  updateGuidedStageDemo(dt);
+}
+
+function updateGuidedStageDemo(dt) {
   const targetRope = demoRopeTarget(state.distance + demoLookAhead());
   const ropeError = targetRope - state.ropeLength;
-  const y = ropeError > 28 ? 1 : ropeError < -28 ? -1 : 0;
-  const x = demoHorizontalInput(ropeError);
+  const y = ropeError > 22 ? 1 : ropeError < -22 ? -1 : 0;
+  const x = demoGuidedHorizontalInput(ropeError);
   const label = y < 0 ? "UP" : y > 0 ? "DOWN" : x > 0 ? "RIGHT" : x < 0 ? "LEFT" : "COAST";
 
   demoInput = { x, y, label };
   updateStageDemoLabel(label);
-  updatePhysics(dt, demoInput, false);
-  recoverStageDemoIfInvalid();
-  state.angle *= Math.max(0, 1 - dt * 2.8);
-  state.angularVelocity *= Math.max(0, 1 - dt * 4.2);
+  state.ropeLength = Math.max(minRopeLength, Math.min(maxRopeLength, state.ropeLength + Math.max(-115 * dt, Math.min(115 * dt, ropeError))));
+
+  const targetSpeed = demoGuidedTargetSpeed(ropeError);
+  state.speed += (targetSpeed - state.speed) * Math.min(1, dt * 3.2);
+  state.distance = Math.max(0, Math.min(goalDistance, state.distance + state.speed * dt));
+  state.accel = (targetSpeed - state.speed) * 0.8;
+  updateGuidedSwitches();
+
+  const windCenter = currentStage.windCenter || 0;
+  const visualSway = Math.sin(demoTime * 2.1 + currentStageIndex) * 0.025;
+  state.angle += (windCenter * 0.75 + visualSway - state.angle) * Math.min(1, dt * 3.4);
+  state.angularVelocity = 0;
   if (completeAutoClearIfNeeded()) return;
 
   if (state.distance >= goalDistance && demoTime > 1.1) {
@@ -579,6 +591,39 @@ function updateStageClearDemo(dt) {
     demoInput = { x: 0, y: 0, label: "COAST" };
     showStageSelect();
   }
+}
+
+function demoGuidedTargetSpeed(ropeError) {
+  if (state.distance >= goalDistance) return 0;
+  if (Math.abs(ropeError) > 62) return 0;
+  if (demoGuidedGateIsUnsafe()) return 0;
+  if (currentStageIndex === 4) return 116;
+  if (currentStageIndex >= 9) return 68;
+  return 58;
+}
+
+function demoGuidedHorizontalInput(ropeError) {
+  if (demoGuidedTargetSpeed(ropeError) <= 0) return 0;
+  return 1;
+}
+
+function demoGuidedGateIsUnsafe() {
+  const load = loadWorldPosition();
+  return currentStage.gates.some((gate) => {
+    if (gateIsOpen(gate)) return false;
+    const distanceToGate = gate.x - load.x;
+    if (distanceToGate < 20 || distanceToGate > 150) return false;
+    const gapY = gateGapY(gate);
+    const gap = gateClearance(gate) - 20;
+    return load.y < gapY - gap / 2 || load.y > gapY + gap / 2;
+  });
+}
+
+function updateGuidedSwitches() {
+  (currentStage.switches || []).forEach((stageSwitch) => {
+    if (state.switches[stageSwitch.id]) return;
+    if (Math.abs(state.distance - stageSwitch.x) < 80) state.switches[stageSwitch.id] = true;
+  });
 }
 
 function demoLookAhead() {
