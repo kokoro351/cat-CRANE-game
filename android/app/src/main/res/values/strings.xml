@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">追いノッチ -クレーン猫 チャレンジ-</string>
+    <string name="title_activity_main">追いノッチ -クレーン猫 チャレンジ-</string>
+    <string name="package_name">com.kokoro351.catcrane</string>
+    <string name="custom_url_scheme">com.kokoro351.catcrane</string>
+</resources>

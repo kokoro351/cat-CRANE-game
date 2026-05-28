@@ -17,9 +17,20 @@ Controls:
 - Releasing every direction coasts.
 - Keyboard: arrow keys or `W`, `A`, `S`, `D`.
 
+## Android
+
+The Android wrapper uses Capacitor.
+
+- `npm run prepare:web` copies the browser game into `www/`.
+- `npm run sync:android` updates the Android project after game changes.
+- `npm run build:android:debug` creates a local debug APK.
+- `npm run build:android:bundle` creates a release AAB for Play Console signing setup.
+- `npm run open:android` opens the Android project in Android Studio.
+
 ## Files
 
 - `index.html` - game shell and controls.
 - `styles.css` - responsive mobile layout.
 - `main.js` - canvas game loop, pendulum swing physics, goal logic, and drawing.
+- `capacitor.config.json` - Android app id, app name, and web asset path.
 - `.github/workflows/deploy-pages.yml` - GitHub Pages deployment workflow.

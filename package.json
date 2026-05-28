@@ -1,0 +1,20 @@
+{
+  "name": "cat-crane-game",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Android app wrapper for Oinotch Crane Cat Challenge.",
+  "scripts": {
+    "prepare:web": "node tools/prepare-web.mjs",
+    "sync:android": "npm run prepare:web && cap sync android",
+    "build:android:debug": "npm run sync:android && cd android && gradlew.bat assembleDebug",
+    "build:android:bundle": "npm run sync:android && cd android && gradlew.bat bundleRelease",
+    "open:android": "npm run sync:android && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1"
+  }
+}
