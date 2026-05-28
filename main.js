@@ -364,6 +364,8 @@ let stageDemoLabelKey = "";
 let stageDemoLabelUntil = 0;
 let stageDemoRecoveries = 0;
 let stageDemoAutoClear = false;
+let stageReplay = [];
+let stageReplayStatus = "empty";
 
 function reset() {
   goalDistance = currentStage.distance;
@@ -553,155 +555,194 @@ function updateDemo(dt) {
 }
 
 function updateStageClearDemo(dt) {
-  demoTime += dt;
-  if (currentStageIndex === 3) {
-    updateStage4ClearDemo(dt);
+  if (stageReplayStatus === "failed" || state.result === "dropped") {
+    updateStageDemoLabel("FAILED", true);
     return;
   }
-  updateGuidedStageDemo(dt);
-}
+  demoTime += dt;
+  demoInput = replayInputAt(demoTime);
+  updateStageDemoLabel(demoInput.label);
+  updatePhysics(dt, demoInput, true);
 
-function updateGuidedStageDemo(dt) {
-  const targetRope = demoRopeTarget(state.distance + demoLookAhead());
-  const ropeError = targetRope - state.ropeLength;
-  const y = ropeError > 22 ? 1 : ropeError < -22 ? -1 : 0;
-  const x = demoGuidedHorizontalInput(ropeError);
-  const label = y < 0 ? "UP" : y > 0 ? "DOWN" : x > 0 ? "RIGHT" : x < 0 ? "LEFT" : "COAST";
-
-  demoInput = { x, y, label };
-  updateStageDemoLabel(label);
-  state.ropeLength = Math.max(minRopeLength, Math.min(maxRopeLength, state.ropeLength + Math.max(-115 * dt, Math.min(115 * dt, ropeError))));
-
-  const targetSpeed = demoGuidedTargetSpeed(ropeError);
-  state.speed += (targetSpeed - state.speed) * Math.min(1, dt * 3.2);
-  state.distance = Math.max(0, Math.min(goalDistance, state.distance + state.speed * dt));
-  state.accel = (targetSpeed - state.speed) * 0.8;
-  updateGuidedSwitches();
-
-  const windCenter = currentStage.windCenter || 0;
-  const visualSway = Math.sin(demoTime * 2.1 + currentStageIndex) * 0.025;
-  state.angle += (windCenter * 0.75 + visualSway - state.angle) * Math.min(1, dt * 3.4);
-  state.angularVelocity = 0;
-  if (completeAutoClearIfNeeded()) return;
-
-  if (state.distance >= goalDistance && demoTime > 1.1) {
-    state.distance = goalDistance;
-    state.speed = 0;
+  if (state.result === "cleared") {
     if (stageDemoAutoClear) markStageCleared(currentStageIndex + 1);
+    state.speed = 0;
     demoInput = { x: 0, y: 0, label: "COAST" };
     showStageSelect();
+  } else if (state.result === "dropped") {
+    updateStageDemoLabel("FAILED", true);
   }
 }
 
-function demoGuidedTargetSpeed(ropeError) {
-  if (state.distance >= goalDistance) return 0;
-  if (Math.abs(ropeError) > 62) return 0;
-  if (demoGuidedGateIsUnsafe()) return 0;
-  if (currentStageIndex === 4) return 116;
-  if (currentStageIndex >= 9) return 68;
-  return 58;
-}
+function buildStageReplay() {
+  const saved = snapshotRunState();
+  const previousScreen = appScreen;
+  const profiles = replayProfilesForStage();
 
-function demoGuidedHorizontalInput(ropeError) {
-  if (demoGuidedTargetSpeed(ropeError) <= 0) return 0;
-  return 1;
-}
-
-function demoGuidedGateIsUnsafe() {
-  const load = loadWorldPosition();
-  return currentStage.gates.some((gate) => {
-    if (gateIsOpen(gate)) return false;
-    const distanceToGate = gate.x - load.x;
-    if (distanceToGate < 20 || distanceToGate > 150) return false;
-    const gapY = gateGapY(gate);
-    const gap = gateClearance(gate) - 20;
-    return load.y < gapY - gap / 2 || load.y > gapY + gap / 2;
-  });
-}
-
-function updateGuidedSwitches() {
-  (currentStage.switches || []).forEach((stageSwitch) => {
-    if (state.switches[stageSwitch.id]) return;
-    if (Math.abs(state.distance - stageSwitch.x) < 80) state.switches[stageSwitch.id] = true;
-  });
-}
-
-function demoLookAhead() {
-  if (currentStageIndex === 1) return Math.max(240, Math.min(360, 230 + state.speed * 2.0));
-  if (currentStageIndex === 2) return Math.max(190, Math.min(300, 180 + state.speed * 1.8));
-  return Math.max(120, Math.min(230, 130 + state.speed * 1.5));
-}
-
-function demoHorizontalInput(ropeError) {
-  if (state.distance >= goalDistance) return 0;
-  const desiredSpeed = currentStageIndex === 1 ? 34 : currentStageIndex === 4 ? 108 : currentStageIndex >= 5 ? 52 : 42;
-  const mustAdjustHeight = Math.abs(ropeError) > (currentStageIndex === 2 ? 70 : currentStageIndex === 1 ? 32 : 46);
-  const shouldWait = demoShouldWaitForHazard();
-
-  if (shouldWait || mustAdjustHeight) {
-    if (state.speed > 18) return -0.35;
-    if (currentStage.windCenter) return -Math.sign(currentStage.windCenter) * 0.22;
-    return 0;
+  for (const profile of profiles) {
+    reset();
+    appScreen = "stageDemo";
+    demoTime = 0;
+    const result = simulateReplayProfile(profile);
+    if (result.success) {
+      restoreRunState(saved);
+      appScreen = previousScreen;
+      stageReplayStatus = "ready";
+      return result.replay;
+    }
   }
-  if (state.speed < desiredSpeed) return 1;
-  if (state.speed > desiredSpeed + 12) return -0.25;
-  return currentStage.windCenter ? -Math.sign(currentStage.windCenter) * 0.16 : 0;
+
+  restoreRunState(saved);
+  appScreen = previousScreen;
+  stageReplayStatus = "failed";
+  return [{ t: 0, x: 0, y: 0, label: "COAST" }];
 }
 
-function demoShouldWaitForHazard() {
+function simulateReplayProfile(profile) {
+  const dt = 1 / 30;
+  const replay = [];
+  let lastKey = "";
+
+  for (let t = 0; t < profile.maxTime; t += dt) {
+    state.stageTime += dt;
+    updateStageMachines(dt);
+    const input = referenceReplayInput(profile);
+    const key = `${input.x},${input.y},${input.label}`;
+    if (key !== lastKey) {
+      replay.push({ t: Number(t.toFixed(2)), ...input });
+      lastKey = key;
+    }
+
+    updatePhysics(dt, input, false);
+    if (Math.abs(toDeg(state.angle)) >= dangerAngle || hitStageHazard()) {
+      return { success: false, replay };
+    }
+    if (state.distance >= goalDistance) {
+      replay.push({ t: Number((t + dt).toFixed(2)), x: 0, y: 0, label: "COAST" });
+      return { success: true, replay };
+    }
+  }
+  return { success: false, replay };
+}
+
+function replayProfilesForStage() {
+  const base = [
+    { speed: 42, lookAhead: 260, heightTolerance: 26, gateMargin: 36, maxTime: 120 },
+    { speed: 34, lookAhead: 320, heightTolerance: 22, gateMargin: 48, maxTime: 150 },
+    { speed: 26, lookAhead: 380, heightTolerance: 18, gateMargin: 60, maxTime: 180 },
+  ];
+  if (currentStageIndex === 4) {
+    return [
+      { speed: 116, lookAhead: 260, heightTolerance: 34, gateMargin: 36, maxTime: 80 },
+      { speed: 104, lookAhead: 300, heightTolerance: 28, gateMargin: 44, maxTime: 95 },
+    ];
+  }
+  if (currentStageIndex === 3) {
+    return [
+      { speed: 46, lookAhead: 240, heightTolerance: 30, gateMargin: 36, maxTime: 120, excavator: true },
+    ];
+  }
+  return base;
+}
+
+function referenceReplayInput(profile) {
+  if (profile.excavator) return referenceExcavatorInput();
+  const targetRope = demoRopeTarget(state.distance + profile.lookAhead);
+  const ropeError = targetRope - state.ropeLength;
+  const y = ropeError > profile.heightTolerance ? 1 : ropeError < -profile.heightTolerance ? -1 : 0;
+  const wait = referenceShouldWait(profile, ropeError);
+  let x = 0;
+
+  if (!wait && Math.abs(ropeError) <= profile.heightTolerance * 2.2) {
+    if (state.speed < profile.speed) x = 1;
+    else if (state.speed > profile.speed + 14) x = -1;
+  } else if (state.speed > 12) {
+    x = -1;
+  } else if (currentStage.windCenter) {
+    x = -Math.sign(currentStage.windCenter);
+  }
+
+  return labeledInput(x, y);
+}
+
+function referenceExcavatorInput() {
+  const excavator = state.machines.find((machine) => machine.kind === "excavator");
+  let x = 1;
+  if (excavator) {
+    const hit = machineHitRect(excavator);
+    const load = loadWorldPosition();
+    const gap = hit.x - load.x;
+    if (excavator.phase === "waiting") x = state.distance < excavator.triggerX + 20 ? 1 : 0;
+    else if (excavator.phase === "left") x = state.distance > 8 ? -1 : 0;
+    else if (excavator.phase === "right") x = gap < 520 ? 0 : 1;
+  }
+  return labeledInput(x, 0);
+}
+
+function referenceShouldWait(profile, ropeError) {
   const load = loadWorldPosition();
-  const checkX = load.x + 170;
   const closedGate = currentStage.gates.some((gate) => {
     if (gateIsOpen(gate)) return false;
-    if (gate.x < load.x + 80 || gate.x > checkX) return false;
+    const distanceToGate = gate.x - load.x;
+    if (distanceToGate < 45 || distanceToGate > 190) return false;
     const gapY = gateGapY(gate);
-    const gap = gateClearance(gate) - (currentStageIndex === 2 ? 60 : 24);
+    const gap = gateClearance(gate) - profile.gateMargin;
     return load.y < gapY - gap / 2 || load.y > gapY + gap / 2;
   });
   if (closedGate) return true;
 
-  return activeProjectiles().some((projectile) => {
+  const projectileDanger = activeProjectiles().some((projectile) => {
     const dx = projectile.x - load.x;
-    return dx > 30 && dx < 190 && Math.abs(projectile.y - load.y) < 82;
+    return dx > 40 && dx < 210 && Math.abs(projectile.y - load.y) < 98;
   });
+  return projectileDanger || Math.abs(ropeError) > profile.heightTolerance * 2.8;
 }
 
-function updateStage4ClearDemo(dt) {
-  const excavator = state.machines.find((machine) => machine.kind === "excavator");
-  const load = loadWorldPosition();
-  let x = 0;
+function labeledInput(x, y) {
+  const clampedX = Math.max(-1, Math.min(1, Math.round(x)));
+  const clampedY = Math.max(-1, Math.min(1, Math.round(y)));
+  return {
+    x: clampedX,
+    y: clampedY,
+    label: clampedY < 0 ? "UP" : clampedY > 0 ? "DOWN" : clampedX < 0 ? "LEFT" : clampedX > 0 ? "RIGHT" : "COAST",
+  };
+}
 
-  if (!excavator) {
-    x = state.distance >= goalDistance ? 0 : 1;
-  } else {
-    const hit = machineHitRect(excavator);
-    const gapToShovel = hit.x - load.x;
-
-    if (excavator.phase === "waiting") {
-      x = state.distance < excavator.triggerX + 35 ? 1 : 0;
-    } else if (excavator.phase === "left") {
-      x = state.distance > 12 ? -1 : 0;
-    } else if (excavator.phase === "right") {
-      x = gapToShovel < 520 ? 0 : 1;
-    }
+function replayInputAt(time) {
+  if (!stageReplay.length) return { x: 0, y: 0, label: "COAST" };
+  let selected = stageReplay[0];
+  for (let i = 1; i < stageReplay.length && stageReplay[i].t <= time; i += 1) {
+    selected = stageReplay[i];
   }
+  return { x: selected.x, y: selected.y, label: selected.label };
+}
 
-  const label = x < 0 ? "LEFT" : x > 0 ? "RIGHT" : "COAST";
-  demoInput = { x, y: 0, label };
-  updateStageDemoLabel(label);
-  updatePhysics(dt, demoInput, false);
-  recoverStageDemoIfInvalid();
-  state.angle *= Math.max(0, 1 - dt * 3.2);
-  state.angularVelocity *= Math.max(0, 1 - dt * 4.8);
-  if (completeAutoClearIfNeeded()) return;
+function snapshotRunState() {
+  return {
+    distance: state.distance,
+    speed: state.speed,
+    accel: state.accel,
+    ropeLength: state.ropeLength,
+    angle: state.angle,
+    angularVelocity: state.angularVelocity,
+    result: state.result,
+    message: state.message,
+    stageTime: state.stageTime,
+    beamX: state.beamX,
+    beamY: state.beamY,
+    beamVx: state.beamVx,
+    beamVy: state.beamVy,
+    beamRotation: state.beamRotation,
+    beamSpin: state.beamSpin,
+    machines: state.machines.map((machine) => ({ ...machine })),
+    switches: { ...state.switches },
+  };
+}
 
-  if (state.distance >= goalDistance && demoTime > 1.1) {
-    state.distance = goalDistance;
-    state.speed = 0;
-    if (stageDemoAutoClear) markStageCleared(currentStageIndex + 1);
-    demoInput = { x: 0, y: 0, label: "COAST" };
-    showStageSelect();
-  }
+function restoreRunState(saved) {
+  Object.assign(state, saved);
+  state.machines = saved.machines.map((machine) => ({ ...machine }));
+  state.switches = { ...saved.switches };
 }
 
 function recoverStageDemoIfInvalid() {
@@ -739,6 +780,7 @@ function completeAutoClearIfNeeded() {
 
 function stageDemoInstruction(label) {
   const prefix = `見本プレイ: ${currentStage.name}`;
+  if (label === "FAILED") return `${prefix}  成功リプレイを作れませんでした`;
   if (label === "RECOVER") return `${prefix}  速度を落として姿勢を立て直す`;
   if (label === "LEFT") return `${prefix}  ←で下がって重機を待つ`;
   if (label === "UP") return `${prefix}  ↑で巻き上げて避ける`;
@@ -879,7 +921,7 @@ function pointInRect(point, rect) {
 }
 
 function gateGapY(gate) {
-  return gate.gapY + Math.sin(performance.now() / 1000 * gate.speed + gate.phase) * 58;
+  return gate.gapY + Math.sin(state.stageTime * gate.speed + gate.phase) * 58;
 }
 
 function gateClearance(gate) {
@@ -1706,6 +1748,9 @@ function startStageDemo(autoClear) {
   stageDemoLabelUntil = 0;
   stageDemoRecoveries = 0;
   stageDemoAutoClear = autoClear;
+  stageReplay = buildStageReplay();
+  reset();
+  demoTime = 0;
   demoLabel.textContent = autoClear
     ? `オートモード: ${currentStage.name} クリアまで自動運転`
     : `見本プレイ: ${currentStage.name} 右・上・下の操作タイミング`;
