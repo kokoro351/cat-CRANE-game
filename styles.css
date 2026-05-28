@@ -247,6 +247,24 @@ button:active {
   box-shadow: 0 3px 8px rgb(23 33 43 / 18%);
 }
 
+.ending-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.ending-actions button {
+  min-height: 46px;
+  background: #25333f;
+}
+
+.ending-actions button:disabled {
+  cursor: not-allowed;
+  background: #8a98a2;
+  opacity: 0.62;
+}
+
 .unlock-status {
   margin: -6px 0 0;
   color: var(--muted);

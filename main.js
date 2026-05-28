@@ -17,6 +17,8 @@ const tutorialButton = document.querySelector("#tutorial-button");
 const stageButton = document.querySelector("#stage-button");
 const stageBackButton = document.querySelector("#stage-back");
 const stageGrid = document.querySelector("#stage-grid");
+const midEndingButton = document.querySelector("#mid-ending-button");
+const finalEndingButton = document.querySelector("#final-ending-button");
 const unlockStatus = document.querySelector("#unlock-status");
 const unlockButton = document.querySelector("#unlock-button");
 const restoreButton = document.querySelector("#restore-button");
@@ -367,6 +369,8 @@ let stageDemoRecoveries = 0;
 let stageDemoAutoClear = false;
 let stageReplay = [];
 let stageReplayStatus = "empty";
+let endingType = "mid";
+let endingTime = 0;
 
 function reset() {
   goalDistance = currentStage.distance;
@@ -425,6 +429,8 @@ function step(now) {
 
   if (appScreen === "demo") {
     updateDemo(dt);
+  } else if (appScreen === "endingMid" || appScreen === "endingFinal") {
+    updateEnding(dt);
   } else if (appScreen === "stageDemo") {
     state.stageTime += dt;
     updateStageMachines(dt);
@@ -964,6 +970,10 @@ function activeProjectiles() {
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
+  if (appScreen === "endingMid" || appScreen === "endingFinal") {
+    drawEnding();
+    return;
+  }
   drawScene();
   drawWind();
   drawTrack();
@@ -1696,6 +1706,202 @@ function drawSpeechBubble(x, y, text) {
   ctx.restore();
 }
 
+function startEnding(type) {
+  endingType = type;
+  endingTime = 0;
+  state.keys.clear();
+  state.buttons.clear();
+  setScreen(type === "final" ? "endingFinal" : "endingMid");
+}
+
+function updateEnding(dt) {
+  endingTime += dt;
+  const duration = endingType === "final" ? 18 : 16;
+  if (endingTime > duration) {
+    showStageSelect();
+  }
+}
+
+function drawEnding() {
+  if (endingType === "final") drawFinalEnding();
+  else drawMidEnding();
+}
+
+function drawEndingSky(progress) {
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, progress > 0.55 ? "#f07f5a" : "#9fdcff");
+  sky.addColorStop(0.58, progress > 0.55 ? "#f7c879" : "#f4fbff");
+  sky.addColorStop(1, progress > 0.55 ? "#25333f" : "#f5d77d");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawMidEnding() {
+  const p = Math.min(1, endingTime / 16);
+  drawEndingSky(p);
+  drawEndingSea(p);
+
+  const shipRock = Math.sin(endingTime * 5) * Math.min(0.35, Math.max(0, p - 0.28) * 1.2);
+  const shipY = 438 + Math.sin(endingTime * 2.2) * 5;
+  drawEndingShip(195, shipY, shipRock);
+
+  const beamStartX = 85 + endingTime * 20;
+  const catJump = endingTime > 2.4 && endingTime < 4.4;
+  const catReturn = endingTime > 8.7 && endingTime < 11.2;
+  let catX = 120;
+  let catY = 318;
+  let catRot = -0.08;
+
+  if (catJump) {
+    const t = (endingTime - 2.4) / 2;
+    catX = 120 + t * 96;
+    catY = 318 - Math.sin(t * Math.PI) * 110 + t * 92;
+    catRot = 0.45;
+  } else if (endingTime >= 4.4 && endingTime < 8.7) {
+    catX = 212;
+    catY = shipY - 92;
+    catRot = shipRock;
+  } else if (catReturn) {
+    const t = (endingTime - 8.7) / 2.5;
+    catX = 212 + t * 96;
+    catY = shipY - 92 - Math.sin(t * Math.PI) * 120 - t * 20;
+    catRot = -0.35;
+  } else if (endingTime >= 11.2) {
+    catX = beamStartX + 82;
+    catY = 318;
+  }
+
+  if (endingTime < 3.1 || endingTime > 10.5) drawEndingCraneBeam(beamStartX, 330);
+  if (endingTime > 5.2 && endingTime < 9.8) drawStormWind();
+  drawEndingCat(catX, catY, catRot);
+
+  const caption = endingTime < 4.7
+    ? "船に飛び乗った！"
+    : endingTime < 9.8
+      ? "でも風が強すぎる！"
+      : "再び鉄骨へ。クレーンはまた動き出す。";
+  drawEndingCaption(caption);
+}
+
+function drawFinalEnding() {
+  const p = Math.min(1, endingTime / 18);
+  drawEndingSky(p);
+  drawIndustrialBackground();
+
+  for (let i = 0; i < 5; i += 1) {
+    const x = 42 + i * 92 - p * 80;
+    drawPlainBeam(x, 404 - (i % 2) * 42, i % 2 ? -0.05 : 0.06);
+  }
+
+  const hop = Math.min(4, Math.floor(endingTime / 2.4));
+  const local = (endingTime % 2.4) / 2.4;
+  const catX = 72 + hop * 76 + local * 62 - p * 48;
+  const catY = 330 - (hop % 2) * 42 - Math.sin(local * Math.PI) * 80;
+  const sleeping = endingTime > 13.2;
+  drawEndingCat(sleeping ? 210 : catX, sleeping ? 334 : catY, sleeping ? 0.05 : 0.2);
+
+  if (sleeping) {
+    drawPlainBeam(178, 424, 0.04);
+    drawEndingCaption("thank you for your playing");
+  } else {
+    drawEndingCaption("鉄骨から鉄骨へ。夕暮れまで進み続ける。");
+  }
+}
+
+function drawEndingSea(progress) {
+  ctx.fillStyle = progress > 0.42 ? "#2f6f8f" : "#5bb4d8";
+  ctx.fillRect(0, 438, W, H - 438);
+  ctx.strokeStyle = "rgb(255 255 255 / 0.42)";
+  ctx.lineWidth = 3;
+  for (let y = 464; y < H; y += 34) {
+    ctx.beginPath();
+    for (let x = -20; x < W + 20; x += 28) {
+      ctx.lineTo(x, y + Math.sin(x * 0.05 + endingTime * 3) * 4);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawEndingShip(x, y, rotation) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.fillStyle = "#d64545";
+  ctx.fillRect(-68, -54, 72, 42);
+  ctx.fillStyle = "#f0b429";
+  ctx.fillRect(-18, -76, 54, 64);
+  ctx.fillStyle = "#25333f";
+  ctx.beginPath();
+  ctx.moveTo(-110, -8);
+  ctx.lineTo(108, -8);
+  ctx.lineTo(72, 42);
+  ctx.lineTo(-84, 42);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgb(255 255 255 / 0.65)";
+  ctx.fillRect(-6, -62, 18, 16);
+  ctx.restore();
+}
+
+function drawEndingCraneBeam(x, y) {
+  ctx.strokeStyle = "#25333f";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x + 80, 96);
+  ctx.lineTo(x + 80, y - 12);
+  ctx.stroke();
+  drawSteelBeam(x + 80, y, Math.sin(endingTime * 2.6) * 0.08);
+}
+
+function drawPlainBeam(x, y, rotation) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.fillStyle = "#6f7f89";
+  ctx.fillRect(-52, -12, 104, 24);
+  ctx.fillStyle = "#43525c";
+  ctx.fillRect(-58, -22, 116, 9);
+  ctx.fillRect(-58, 13, 116, 9);
+  ctx.restore();
+}
+
+function drawEndingCat(x, y, rotation) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  if (beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
+    ctx.drawImage(beamCatSprite, -52, -104, 96, 138);
+  } else {
+    ctx.fillStyle = "#f0b429";
+    ctx.beginPath();
+    ctx.arc(0, -36, 24, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawStormWind() {
+  ctx.strokeStyle = "rgb(255 255 255 / 0.72)";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  for (let y = 154; y < 382; y += 52) {
+    ctx.beginPath();
+    ctx.moveTo(W - 28, y);
+    ctx.lineTo(52, y + Math.sin(endingTime * 4 + y) * 16);
+    ctx.stroke();
+  }
+}
+
+function drawEndingCaption(text) {
+  ctx.fillStyle = "rgb(23 33 43 / 0.72)";
+  ctx.fillRect(18, 586, W - 36, 56);
+  ctx.fillStyle = "#fff";
+  ctx.font = "900 19px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(text, W / 2, 621);
+  ctx.textAlign = "left";
+}
+
 function setScreen(nextScreen) {
   appScreen = nextScreen;
   startScreen.classList.toggle("hidden", nextScreen !== "start");
@@ -1705,7 +1911,7 @@ function setScreen(nextScreen) {
   demoLabel.classList.toggle("hidden", !["demo", "stageDemo"].includes(nextScreen));
   shell.classList.toggle("menu-mode", ["start", "stage", "purchase", "tutorial"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
-  shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo");
+  shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo" || nextScreen === "endingMid" || nextScreen === "endingFinal");
   resultPanel.classList.add("hidden");
   if (nextScreen !== "stageDemo") stageDemoAutoClear = false;
   if (nextScreen !== "demo" && nextScreen !== "stageDemo") {
@@ -1838,6 +2044,14 @@ function buildStageGrid() {
     });
     stageGrid.append(button);
   }
+  syncEndingButtons();
+}
+
+function syncEndingButtons() {
+  const midReady = [1, 2, 3, 4].every((stageNumber) => clearedStages.has(stageNumber));
+  const finalReady = stages.every((_, index) => clearedStages.has(index + 1));
+  midEndingButton.disabled = !midReady;
+  finalEndingButton.disabled = !finalReady;
 }
 
 function unlockAllStages() {
@@ -1888,6 +2102,12 @@ bindMenuAction(resultAutoBtn, startStageAutoClear);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
 stageBackButton.addEventListener("click", showTitle);
+midEndingButton.addEventListener("click", () => {
+  if (!midEndingButton.disabled) startEnding("mid");
+});
+finalEndingButton.addEventListener("click", () => {
+  if (!finalEndingButton.disabled) startEnding("final");
+});
 unlockButton.addEventListener("click", unlockAllStages);
 restoreButton.addEventListener("click", unlockAllStages);
 purchaseCloseButton.addEventListener("click", showStageSelect);
