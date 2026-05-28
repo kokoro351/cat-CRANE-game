@@ -11,18 +11,13 @@ const downBtn = document.querySelector("#down");
 const shell = document.querySelector(".game-shell");
 const startScreen = document.querySelector("#start-screen");
 const stageScreen = document.querySelector("#stage-screen");
-const purchaseScreen = document.querySelector("#purchase-screen");
 const tutorialScreen = document.querySelector("#tutorial-screen");
 const tutorialButton = document.querySelector("#tutorial-button");
 const stageButton = document.querySelector("#stage-button");
 const stageBackButton = document.querySelector("#stage-back");
 const stageGrid = document.querySelector("#stage-grid");
-const midEndingButton = document.querySelector("#mid-ending-button");
-const finalEndingButton = document.querySelector("#final-ending-button");
+const endingButton = document.querySelector("#ending-button");
 const unlockStatus = document.querySelector("#unlock-status");
-const unlockButton = document.querySelector("#unlock-button");
-const restoreButton = document.querySelector("#restore-button");
-const purchaseCloseButton = document.querySelector("#purchase-close");
 const storyTitle = document.querySelector("#story-title");
 const storyText = document.querySelector("#story-text");
 const storyVisual = document.querySelector("#story-visual");
@@ -49,8 +44,6 @@ const cameraLead = 120;
 const visibleWorld = W - 148;
 const dangerAngle = 34;
 const warningAngle = 24;
-const freeStageCount = 4;
-const stageUnlockKey = "catCrane.allStagesUnlocked";
 const clearedStagesKey = "catCrane.clearedStages";
 const beamSpriteWidth = 96;
 const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
@@ -309,7 +302,6 @@ const stages = [
 stages.length = 10;
 let currentStageIndex = 0;
 let currentStage = stages[currentStageIndex];
-let allStagesUnlocked = localStorage.getItem(stageUnlockKey) === "true";
 let clearedStages = loadClearedStages();
 const tutorialScenes = [
   {
@@ -366,7 +358,6 @@ let stageDemoAutoClear = false;
 let stageReplay = [];
 let stageReplayProfile = null;
 let stageReplayStatus = "empty";
-let endingType = "mid";
 let endingTime = 0;
 
 function reset() {
@@ -426,7 +417,7 @@ function step(now) {
 
   if (appScreen === "demo") {
     updateDemo(dt);
-  } else if (appScreen === "endingMid" || appScreen === "endingFinal") {
+  } else if (appScreen === "ending") {
     updateEnding(dt);
   } else if (appScreen === "stageDemo") {
     const autoSteps = stageDemoAutoClear ? 2 : 1;
@@ -1010,7 +1001,7 @@ function activeProjectiles() {
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
-  if (appScreen === "endingMid" || appScreen === "endingFinal") {
+  if (appScreen === "ending") {
     drawEnding();
     return;
   }
@@ -1780,25 +1771,68 @@ function drawSpeechBubble(x, y, text) {
   ctx.restore();
 }
 
-function startEnding(type) {
-  endingType = type;
+function startEnding() {
   endingTime = 0;
   state.keys.clear();
   state.buttons.clear();
-  setScreen(type === "final" ? "endingFinal" : "endingMid");
+  setScreen("ending");
 }
 
 function updateEnding(dt) {
   endingTime += dt;
-  const duration = endingType === "final" ? 18 : 16;
-  if (endingTime > duration) {
+  if (endingTime > 22) {
     showStageSelect();
   }
 }
 
 function drawEnding() {
-  if (endingType === "final") drawFinalEnding();
-  else drawMidEnding();
+  const p = Math.min(1, endingTime / 22);
+  drawEndingSky(p);
+  drawIndustrialBackground();
+  drawEndingSea(p);
+
+  const craneX = 86 + endingTime * 12;
+  const beamX = 78 + endingTime * 18;
+  const beamY = 322 + Math.sin(endingTime * 1.8) * 7;
+  const shipX = 278 - Math.max(0, endingTime - 10) * 8;
+  const shipY = 448 + Math.sin(endingTime * 2.2) * 4;
+  const sunY = 118 + Math.min(1, Math.max(0, (endingTime - 13) / 5)) * 420;
+  const sleep = endingTime > 16.2;
+
+  ctx.save();
+  ctx.fillStyle = "#f0b429";
+  ctx.beginPath();
+  ctx.arc(318, sunY, 34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  drawEndingShip(shipX, shipY, Math.sin(endingTime * 2.8) * 0.05);
+  drawEndingCraneBeam(craneX, beamY);
+  drawPlainBeam(beamX + 58, beamY + 86, Math.sin(endingTime * 1.7) * 0.06);
+
+  if (endingTime < 5.2) {
+    drawEndingCat(beamX + 52, beamY + 58, Math.sin(endingTime * 2) * 0.08);
+    drawEndingCaption("最後の一本。猫は静かに揺れを読んでいる。");
+  } else if (endingTime < 9.2) {
+    const t = (endingTime - 5.2) / 4;
+    const catX = beamX + 52 + t * 116;
+    const catY = beamY + 58 - Math.sin(t * Math.PI) * 118 + t * 58;
+    drawEndingCat(catX, catY, 0.35 - t * 0.45);
+    drawEndingCaption("チョン、待って、長押し。今日の現場もヨシ。");
+  } else if (endingTime < 14.6) {
+    const walk = (endingTime - 9.2) / 5.4;
+    drawEndingCat(shipX - 48 + walk * 92, shipY - 96 + Math.sin(endingTime * 6) * 3, Math.sin(endingTime * 5) * 0.08);
+    drawStormWind();
+    drawEndingCaption("港の風が吹いても、もう猫はあわてない。");
+  } else if (!sleep) {
+    const t = (endingTime - 14.6) / 1.6;
+    drawEndingCat(230 + t * 28, 354 - Math.sin(t * Math.PI) * 44, 0.2);
+    drawEndingCaption("ヘルメットを直して、指差し呼称。");
+  } else {
+    drawPlainBeam(196, 426, 0.04);
+    drawEndingCat(206, 336, 0.05);
+    drawEndingCaption(endingTime < 19.2 ? "ご安全に。また明日。" : "thank you for your playing");
+  }
 }
 
 function drawEndingSky(progress) {
@@ -1980,12 +2014,11 @@ function setScreen(nextScreen) {
   appScreen = nextScreen;
   startScreen.classList.toggle("hidden", nextScreen !== "start");
   stageScreen.classList.toggle("hidden", nextScreen !== "stage");
-  purchaseScreen.classList.toggle("hidden", nextScreen !== "purchase");
   tutorialScreen.classList.toggle("hidden", nextScreen !== "tutorial");
   demoLabel.classList.toggle("hidden", !["demo", "stageDemo"].includes(nextScreen));
-  shell.classList.toggle("menu-mode", ["start", "stage", "purchase", "tutorial"].includes(nextScreen));
+  shell.classList.toggle("menu-mode", ["start", "stage", "tutorial"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
-  shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo" || nextScreen === "endingMid" || nextScreen === "endingFinal");
+  shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo" || nextScreen === "ending");
   resultPanel.classList.add("hidden");
   if (nextScreen !== "stageDemo") stageDemoAutoClear = false;
   if (nextScreen !== "demo" && nextScreen !== "stageDemo") {
@@ -2003,10 +2036,6 @@ function showStageSelect() {
   state.buttons.clear();
   buildStageGrid();
   setScreen("stage");
-}
-
-function showPurchase() {
-  setScreen("purchase");
 }
 
 function startGame(stageNumber = currentStageIndex + 1) {
@@ -2111,43 +2140,22 @@ function syncDemoCues() {
 
 function buildStageGrid() {
   stageGrid.innerHTML = "";
-  unlockStatus.textContent = allStagesUnlocked
-    ? "全ステージ解放済み"
-    : `ステージ1〜${freeStageCount}は無料 / ステージ${freeStageCount + 1}〜${stages.length}は全解放購入`;
+  unlockStatus.textContent = "全ステージを選択できます";
   for (let i = 1; i <= stages.length; i += 1) {
-    const locked = i > freeStageCount && !allStagesUnlocked;
     const cleared = clearedStages.has(i);
     const button = document.createElement("button");
     button.type = "button";
-    button.classList.toggle("locked-stage", locked);
     button.classList.toggle("cleared-stage", cleared);
-    button.innerHTML = locked
-      ? `<span>${stages[i - 1].name}</span><small>LOCK</small>`
-      : `<span>${stages[i - 1].name}</span>${cleared ? "<b>CLEAR</b>" : ""}`;
-    button.addEventListener("click", () => {
-      if (locked) {
-        showPurchase();
-      } else {
-        startGame(i);
-      }
-    });
+    button.innerHTML = `<span>${stages[i - 1].name}</span>${cleared ? "<b>CLEAR</b>" : ""}`;
+    button.addEventListener("click", () => startGame(i));
     stageGrid.append(button);
   }
   syncEndingButtons();
 }
 
 function syncEndingButtons() {
-  const midReady = [1, 2, 3, 4].every((stageNumber) => clearedStages.has(stageNumber));
-  const finalReady = stages.every((_, index) => clearedStages.has(index + 1));
-  midEndingButton.disabled = !midReady;
-  finalEndingButton.disabled = !finalReady;
-}
-
-function unlockAllStages() {
-  allStagesUnlocked = true;
-  localStorage.setItem(stageUnlockKey, "true");
-  buildStageGrid();
-  showStageSelect();
+  const endingReady = stages.every((_, index) => clearedStages.has(index + 1));
+  endingButton.disabled = !endingReady;
 }
 
 function bindMenuAction(button, action) {
@@ -2190,15 +2198,9 @@ bindMenuAction(resultAutoBtn, startStageAutoClear);
 tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", showStageSelect);
 stageBackButton.addEventListener("click", showTitle);
-midEndingButton.addEventListener("click", () => {
-  if (!midEndingButton.disabled) startEnding("mid");
+endingButton.addEventListener("click", () => {
+  if (!endingButton.disabled) startEnding();
 });
-finalEndingButton.addEventListener("click", () => {
-  if (!finalEndingButton.disabled) startEnding("final");
-});
-unlockButton.addEventListener("click", unlockAllStages);
-restoreButton.addEventListener("click", unlockAllStages);
-purchaseCloseButton.addEventListener("click", showStageSelect);
 storyNextButton.addEventListener("click", () => {
   storyIndex += 1;
   if (storyIndex >= tutorialScenes.length) {
