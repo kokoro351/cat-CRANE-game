@@ -57,12 +57,12 @@ const beamSpriteWidth = 96;
 const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
 const obstacleHeightScale = 0.72;
 const gateGapBonus = 78;
-const pendulumReturnScale = 0.66;
+const pendulumReturnScale = 0.70;
 const stages = [
-  { name: "ステージ1", distance: 2200, obstacles: [], gates: [] },
+  { name: "ステージ1", distance: 1600, obstacles: [], gates: [] },
   {
     name: "ステージ2",
-    distance: 2400,
+    distance: 1900,
     obstacles: [
       { x: 640, y: 218, w: 104, h: 38 },
       { x: 1080, y: 432, w: 108, h: 38 },
@@ -72,7 +72,7 @@ const stages = [
   },
   {
     name: "ステージ3",
-    distance: 2500,
+    distance: 1850,
     obstacles: [],
     gates: [
       { x: 720, w: 34, gapY: 355, gap: 188, phase: 0, speed: 1.2 },
@@ -81,7 +81,7 @@ const stages = [
   },
   {
     name: "ステージ4",
-    distance: 2600,
+    distance: 2300,
     obstacles: [],
     gates: [],
     machines: [
@@ -90,7 +90,7 @@ const stages = [
   },
   {
     name: "ステージ5",
-    distance: 2700,
+    distance: 2300,
     obstacles: [{ x: 1080, y: 246, w: 160, h: 48 }],
     gates: [{ x: 1760, w: 34, gapY: 352, gap: 142, phase: 0.7, speed: 2.0 }],
     machines: [
@@ -99,7 +99,7 @@ const stages = [
   },
   {
     name: "ステージ6",
-    distance: 2800,
+    distance: 2300,
     windCenter: -0.12,
     obstacles: [],
     gates: [
@@ -110,7 +110,7 @@ const stages = [
   },
   {
     name: "ステージ7",
-    distance: 2900,
+    distance: 2500,
     windCenter: 0.12,
     obstacles: [
       { x: 520, y: 230, w: 180, h: 42 },
@@ -122,7 +122,7 @@ const stages = [
   },
   {
     name: "ステージ8",
-    distance: 3000,
+    distance: 2600,
     obstacles: [
       { x: 650, y: 420, w: 150, h: 44 },
       { x: 1730, y: 242, w: 150, h: 44 },
@@ -138,7 +138,7 @@ const stages = [
   },
   {
     name: "ステージ9",
-    distance: 3150,
+    distance: 2300,
     obstacles: [
       { x: 520, y: 248, w: 126, h: 48 },
       { x: 1160, y: 398, w: 126, h: 48 },
@@ -150,7 +150,7 @@ const stages = [
   },
   {
     name: "ステージ10",
-    distance: 3200,
+    distance: 2500,
     windCenter: -0.07,
     obstacles: [{ x: 2050, y: 390, w: 180, h: 48 }],
     gates: [
@@ -161,7 +161,7 @@ const stages = [
   },
   {
     name: "ステージ11",
-    distance: 3300,
+    distance: 2700,
     windCenter: 0.07,
     obstacles: [
       { x: 520, y: 420, w: 180, h: 48 },
@@ -174,7 +174,7 @@ const stages = [
   },
   {
     name: "ステージ12",
-    distance: 3400,
+    distance: 2900,
     obstacles: [
       { x: 790, y: 262, w: 140, h: 42 },
       { x: 1900, y: 420, w: 150, h: 44 },
@@ -188,7 +188,7 @@ const stages = [
   },
   {
     name: "ステージ13",
-    distance: 3500,
+    distance: 3050,
     obstacles: [
       { x: 530, y: 244, w: 130, h: 46 },
       { x: 830, y: 390, w: 130, h: 46 },
@@ -201,7 +201,7 @@ const stages = [
   },
   {
     name: "ステージ14",
-    distance: 3600,
+    distance: 2850,
     obstacles: [
       { x: 690, y: 300, w: 110, h: 160 },
       { x: 1550, y: 210, w: 110, h: 160 },
@@ -214,7 +214,7 @@ const stages = [
   },
   {
     name: "ステージ15",
-    distance: 3700,
+    distance: 3100,
     windCenter: -0.08,
     obstacles: [
       { x: 500, y: 430, w: 150, h: 44 },
@@ -230,7 +230,7 @@ const stages = [
   },
   {
     name: "ステージ16",
-    distance: 3800,
+    distance: 3350,
     obstacles: [
       { x: 620, y: 252, w: 170, h: 46 },
       { x: 1260, y: 396, w: 170, h: 46 },
@@ -245,7 +245,7 @@ const stages = [
   },
   {
     name: "ステージ17",
-    distance: 3900,
+    distance: 3050,
     obstacles: [
       { x: 500, y: 250, w: 125, h: 44 },
       { x: 770, y: 415, w: 125, h: 44 },
@@ -259,7 +259,7 @@ const stages = [
   },
   {
     name: "ステージ18",
-    distance: 4000,
+    distance: 3600,
     windCenter: 0.09,
     obstacles: [
       { x: 700, y: 214, w: 150, h: 50 },
@@ -274,7 +274,7 @@ const stages = [
   },
   {
     name: "ステージ19",
-    distance: 4100,
+    distance: 3500,
     obstacles: [
       { x: 540, y: 388, w: 150, h: 46 },
       { x: 900, y: 236, w: 150, h: 46 },
@@ -290,7 +290,7 @@ const stages = [
   },
   {
     name: "ステージ20",
-    distance: 4300,
+    distance: 4100,
     windCenter: -0.08,
     obstacles: [
       { x: 560, y: 230, w: 150, h: 46 },
