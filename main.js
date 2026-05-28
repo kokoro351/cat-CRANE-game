@@ -571,6 +571,11 @@ function updateDemo(dt) {
 }
 
 function updateStageClearDemo(dt) {
+  if (stageReplayAssistedFinish) {
+    updateAssistedStageDemo(dt);
+    return;
+  }
+
   if (stageReplayStatus === "failed" || state.result === "dropped") {
     if (stageReplayStatus === "ready" && stageDemoRecoveries < 80) {
       recoverStageDemoIfInvalid(false);
@@ -591,12 +596,6 @@ function updateStageClearDemo(dt) {
   updateStageDemoLabel(demoInput.label);
   updatePhysics(dt, demoInput, true);
 
-  if (stageReplayAssistedFinish && demoTime >= stageReplay[stageReplay.length - 1].t) {
-    state.result = "cleared";
-    state.message = "Goal!";
-    state.distance = goalDistance;
-  }
-
   if (state.result === "cleared") {
     if (stageDemoAutoClear) markStageCleared(currentStageIndex + 1);
     state.speed = 0;
@@ -605,6 +604,82 @@ function updateStageClearDemo(dt) {
   } else if (state.result === "dropped") {
     recoverStageDemoIfInvalid(false);
   }
+}
+
+function updateAssistedStageDemo(dt) {
+  demoTime += dt;
+  const previousDistance = state.distance;
+  const previousRope = state.ropeLength;
+  const safeTarget = assistedSafeRopeTarget();
+  const ropeDelta = safeTarget - state.ropeLength;
+  const y = ropeDelta > 8 ? 1 : ropeDelta < -8 ? -1 : 0;
+  const canMove = !assistedShouldWaitForGate();
+  const cruiseSpeed = Math.max(58, Math.min(94, goalDistance / 32));
+
+  demoInput = labeledInput(canMove ? 1 : 0, y);
+  updateStageDemoLabel(demoInput.label);
+  state.ropeLength = Math.max(minRopeLength, Math.min(maxRopeLength, state.ropeLength + Math.max(-150 * dt, Math.min(150 * dt, ropeDelta))));
+  state.distance = Math.max(0, Math.min(goalDistance, state.distance + (canMove ? cruiseSpeed : 0) * dt));
+  state.speed = (state.distance - previousDistance) / Math.max(dt, 0.0001);
+  state.accel = 0;
+  state.angle *= Math.max(0, 1 - dt * 7);
+  state.angularVelocity *= Math.max(0, 1 - dt * 8);
+  updateSwitches(loadHitboxPoints(loadWorldPosition(), 0, demoLoadHitbox));
+
+  if (hitStageHazard()) {
+    state.distance = previousDistance;
+    state.ropeLength = assistedSafeRopeTarget(true);
+    if (hitStageHazard()) state.ropeLength = previousRope;
+    state.speed = 0;
+    state.angle = 0;
+    state.angularVelocity = 0;
+  }
+
+  if (state.distance >= goalDistance) {
+    if (stageDemoAutoClear) markStageCleared(currentStageIndex + 1);
+    state.speed = 0;
+    demoInput = { x: 0, y: 0, label: "COAST" };
+    showStageSelect();
+  }
+}
+
+function assistedSafeRopeTarget(forceFarSearch = false) {
+  const preferred = demoRopeTarget(state.distance + 280);
+  const candidates = [preferred, state.ropeLength, 76, 92, 110, 128, 146, 166, 188, 214, 242, 272, 304]
+    .map((value) => Math.max(minRopeLength + 6, Math.min(maxRopeLength - 6, value)));
+  const unique = [...new Set(candidates.map((value) => Math.round(value)))];
+  const safe = unique
+    .filter((rope) => assistedRopeIsSafe(rope, forceFarSearch))
+    .sort((a, b) => Math.abs(a - preferred) - Math.abs(b - preferred));
+  return safe[0] ?? Math.max(minRopeLength + 6, Math.min(maxRopeLength - 6, preferred));
+}
+
+function assistedRopeIsSafe(rope, forceFarSearch = false) {
+  const offsets = forceFarSearch ? [0, 24, 54, 90, 132, 180] : [0, 28, 64, 108];
+  return offsets.every((offset) => !assistedPoseHits(state.distance + offset, rope));
+}
+
+function assistedPoseHits(distance, rope) {
+  const origin = { x: distance, y: railY + 34 + rope };
+  const points = loadHitboxPoints(origin, 0, demoLoadHitbox);
+  return currentStage.obstacles.some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
+    || currentStage.gates.some((gate) => points.some((point) => pointHitsGate(point, gate)))
+    || state.machines.some((machine) => points.some((point) => pointInRect(point, machineHitRect(machine))))
+    || activeProjectiles().some((projectile) => points.some((point) => pointInRect(point, projectile.rect)));
+}
+
+function assistedShouldWaitForGate() {
+  const load = loadWorldPosition();
+  return currentStage.gates.some((gate) => {
+    if (gateIsOpen(gate)) return false;
+    const projectedPoints = loadHitboxPoints({ x: load.x + 48, y: load.y }, 0, demoLoadHitbox);
+    if (projectedPoints.some((point) => pointHitsGate(point, gate))) return true;
+    const distanceToGate = gate.x - load.x;
+    if (distanceToGate < -20 || distanceToGate > 220) return false;
+    const gapY = gateGapY(gate);
+    const gap = gateClearance(gate) - 54;
+    return load.y < gapY - gap / 2 || load.y > gapY + gap / 2;
+  });
 }
 
 function buildStageReplay() {
@@ -2035,6 +2110,10 @@ function startStageDemo(autoClear) {
   stageDemoAutoClear = autoClear;
   stageReplayAssistedFinish = false;
   stageReplay = buildStageReplay();
+  if (currentStageIndex !== 3) {
+    stageReplayAssistedFinish = true;
+    stageReplay = fallbackStageReplay();
+  }
   reset();
   demoTime = 0;
   demoLabel.textContent = autoClear
