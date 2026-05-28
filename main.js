@@ -63,29 +63,68 @@ const driveCoastBrake = 16;
 const maxForwardSpeed = 112;
 const trolleyAccelDivisor = 40;
 const stages = [
-  { name: "ステージ1", distance: 1600, obstacles: [], gates: [] },
+  { name: "ステージ1", distance: 1500, obstacles: [], gates: [] },
   {
     name: "ステージ2",
-    distance: 1900,
+    distance: 1700,
     obstacles: [
-      { x: 640, y: 218, w: 104, h: 38 },
-      { x: 1080, y: 432, w: 108, h: 38 },
-      { x: 1560, y: 226, w: 104, h: 40 },
+      { x: 610, y: 222, w: 104, h: 38 },
+      { x: 1060, y: 424, w: 112, h: 38 },
+      { x: 1430, y: 230, w: 104, h: 40 },
     ],
     gates: [],
   },
   {
     name: "ステージ3",
-    distance: 1850,
+    distance: 1550,
     obstacles: [],
-    gates: [
-      { x: 720, w: 34, gapY: 355, gap: 188, phase: 0, speed: 1.2 },
-      { x: 1420, w: 34, gapY: 318, gap: 178, phase: 1.2, speed: 1.25 },
+    gates: [],
+    swingGates: [
+      { x: 640, w: 46, limit: 24 },
+      { x: 1180, w: 46, limit: 22 },
     ],
   },
   {
     name: "ステージ4",
-    distance: 2300,
+    distance: 1750,
+    obstacles: [],
+    gates: [
+      { x: 700, w: 34, gapY: 354, gap: 214, phase: 0, speed: 1.1 },
+      { x: 1340, w: 34, gapY: 318, gap: 206, phase: 1.35, speed: 1.15 },
+    ],
+  },
+  {
+    name: "ステージ5",
+    distance: 1750,
+    windCenter: -0.08,
+    obstacles: [],
+    gates: [
+      { x: 1120, w: 34, gapY: 350, gap: 226, phase: 0.9, speed: 1.05 },
+    ],
+    swingGates: [{ x: 1460, w: 46, limit: 26 }],
+  },
+  {
+    name: "ステージ6",
+    distance: 2050,
+    obstacles: [
+      { x: 520, y: 250, w: 118, h: 44 },
+      { x: 1140, y: 400, w: 118, h: 44 },
+    ],
+    gates: [{ x: 1640, w: 40, gapY: 338, gap: 168, phase: 0, speed: 0, switchId: "tank1" }],
+    switches: [
+      { id: "tank1", x: 850, y: 374, w: 126, h: 104 },
+    ],
+  },
+  {
+    name: "ステージ7",
+    distance: 1850,
+    obstacles: [{ x: 1260, y: 420, w: 130, h: 40 }],
+    gates: [{ x: 760, w: 34, gapY: 334, gap: 226, phase: 0.6, speed: 0.95 }],
+    projectiles: [{ kind: "wrench", y: 500, speed: 104, interval: 3.7, phase: 0.7 }],
+  },
+  {
+    name: "ステージ8",
+    distance: 2200,
     obstacles: [],
     gates: [],
     machines: [
@@ -93,61 +132,27 @@ const stages = [
     ],
   },
   {
-    name: "ステージ5",
-    distance: 2300,
-    obstacles: [{ x: 1080, y: 220, w: 130, h: 36 }],
-    gates: [{ x: 1760, w: 34, gapY: 352, gap: 210, phase: 0.7, speed: 1.35 }],
-    machines: [
-      { kind: "forklift", startX: -1040, y: 150, w: 330, h: 388, speed: 38, maxX: 2920 },
-    ],
-  },
-  {
-    name: "ステージ6",
-    distance: 1750,
-    windCenter: -0.08,
-    obstacles: [],
-    gates: [
-      { x: 560, w: 34, gapY: 330, gap: 190, phase: 0.2, speed: 1.4 },
-      { x: 1120, w: 34, gapY: 370, gap: 188, phase: 2.1, speed: 1.3 },
-      { x: 1500, w: 34, gapY: 315, gap: 190, phase: 1.1, speed: 1.4 },
-    ],
-  },
-  {
-    name: "ステージ7",
-    distance: 1500,
-    windCenter: 0.05,
-    obstacles: [],
-    gates: [],
-  },
-  {
-    name: "ステージ8",
-    distance: 1600,
-    obstacles: [],
-    gates: [
-      { x: 980, w: 34, gapY: 342, gap: 240, phase: 0.5, speed: 1.0 },
-    ],
-  },
-  {
     name: "ステージ9",
-    distance: 2300,
-    obstacles: [
-      { x: 520, y: 248, w: 126, h: 48 },
-      { x: 1160, y: 398, w: 126, h: 48 },
-    ],
-    gates: [{ x: 1760, w: 40, gapY: 338, gap: 118, phase: 0, speed: 0, switchId: "tank1" }],
-    switches: [
-      { id: "tank1", x: 850, y: 374, w: 120, h: 98 },
+    distance: 2200,
+    obstacles: [{ x: 1080, y: 220, w: 126, h: 36 }],
+    gates: [{ x: 1700, w: 34, gapY: 352, gap: 222, phase: 0.7, speed: 1.1 }],
+    machines: [
+      { kind: "forklift", startX: -1040, y: 150, w: 330, h: 388, speed: 36, maxX: 2920 },
     ],
   },
   {
     name: "ステージ10",
-    distance: 1850,
-    windCenter: -0.04,
-    obstacles: [{ x: 1550, y: 390, w: 140, h: 40 }],
-    gates: [
-      { x: 620, w: 36, gapY: 344, gap: 194, phase: 0, speed: 1.45 },
-      { x: 1180, w: 36, gapY: 328, gap: 190, phase: 1.6, speed: 1.4 },
+    distance: 2150,
+    windCenter: 0.05,
+    obstacles: [
+      { x: 760, y: 424, w: 122, h: 40 },
+      { x: 1480, y: 232, w: 118, h: 40 },
     ],
+    gates: [
+      { x: 1120, w: 36, gapY: 344, gap: 224, phase: 0.4, speed: 1.0 },
+      { x: 1840, w: 36, gapY: 326, gap: 218, phase: 1.6, speed: 1.05 },
+    ],
+    swingGates: [{ x: 2020, w: 48, limit: 24 }],
   },
   {
     name: "ステージ11",
@@ -650,7 +655,7 @@ function replayProfilesForStage() {
     { speed: 26, lookAhead: 380, heightTolerance: 18, gateMargin: 60, maxTime: 180 },
     { speed: 20, lookAhead: 420, heightTolerance: 16, gateMargin: 70, maxTime: 240 },
   ];
-  if (currentStageIndex === 4) {
+  if ((currentStage.machines || []).some((machine) => machine.kind === "forklift")) {
     return [
       { speed: 92, lookAhead: 360, heightTolerance: 40, gateMargin: 66, maxTime: 70, notchStyle: "tapHold", tapStart: 0.45, tapEnd: 0.84, holdStart: 1.72, holdUntil: 5.5 },
       { speed: 78, lookAhead: 360, heightTolerance: 34, gateMargin: 60, maxTime: 120, notch: true, notchAngle: -0.08, notchVelocity: -0.18, startDelay: 1.2 },
@@ -660,7 +665,7 @@ function replayProfilesForStage() {
       { speed: 92, lookAhead: 300, heightTolerance: 34, gateMargin: 72, maxTime: 110 },
     ];
   }
-  if (currentStageIndex === 3) {
+  if ((currentStage.machines || []).some((machine) => machine.kind === "excavator")) {
     return [
       { speed: 46, lookAhead: 240, heightTolerance: 30, gateMargin: 36, maxTime: 120, excavator: true },
     ];
@@ -906,6 +911,7 @@ function hitStageHazard() {
   updateSwitches(points);
   return currentStage.obstacles.some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
     || currentStage.gates.some((gate) => points.some((point) => pointHitsGate(point, gate)))
+    || (currentStage.swingGates || []).some((gate) => points.some((point) => pointHitsSwingGate(point, gate)))
     || state.machines.some((machine) => points.some((point) => pointInRect(point, machineHitRect(machine))))
     || activeProjectiles().some((projectile) => points.some((point) => pointInRect(point, projectile.rect)));
 }
@@ -979,6 +985,11 @@ function pointHitsGate(point, gate) {
   const gapY = gateGapY(gate);
   const gap = gateClearance(gate);
   return point.y < gapY - gap / 2 || point.y > gapY + gap / 2;
+}
+
+function pointHitsSwingGate(point, gate) {
+  if (point.x < gate.x || point.x > gate.x + gate.w) return false;
+  return Math.abs(state.angle * 180 / Math.PI) > gate.limit;
 }
 
 function activeProjectiles() {
@@ -1151,6 +1162,7 @@ function drawStageHazards() {
   (currentStage.switches || []).forEach(drawSwitch);
   currentStage.obstacles.forEach(drawObstacle);
   currentStage.gates.forEach(drawGate);
+  (currentStage.swingGates || []).forEach(drawSwingGate);
   state.machines.forEach(drawMachine);
   activeProjectiles().forEach(drawProjectile);
 }
@@ -1419,6 +1431,35 @@ function drawGate(gate) {
   ctx.font = "900 12px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("GATE", x + gate.w / 2, Math.max(topY + 22, gapY - gap / 2 - 8));
+  ctx.textAlign = "left";
+  ctx.restore();
+}
+
+function drawSwingGate(gate) {
+  const x = worldToScreen(gate.x);
+  if (x + gate.w < -40 || x > W + 40) return;
+  const topY = railY - 18;
+  const height = groundY - topY;
+  const swingDeg = Math.abs(state.angle * 180 / Math.PI);
+  const clear = swingDeg <= gate.limit;
+
+  ctx.save();
+  ctx.fillStyle = clear ? "rgb(21 154 156 / 0.18)" : "rgb(214 69 69 / 0.22)";
+  ctx.strokeStyle = clear ? "#159a9c" : "#d64545";
+  ctx.lineWidth = 4;
+  ctx.setLineDash([10, 8]);
+  ctx.strokeRect(x, topY, gate.w, height);
+  ctx.setLineDash([]);
+  ctx.fillRect(x, topY, gate.w, height);
+
+  ctx.fillStyle = clear ? "#159a9c" : "#d64545";
+  ctx.beginPath();
+  ctx.roundRect(x - 30, topY + 16, gate.w + 60, 42, 8);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.font = "900 12px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`ゆれ${gate.limit}°以下`, x + gate.w / 2, topY + 42);
   ctx.textAlign = "left";
   ctx.restore();
 }
