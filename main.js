@@ -12,10 +12,12 @@ const shell = document.querySelector(".game-shell");
 const startScreen = document.querySelector("#start-screen");
 const stageScreen = document.querySelector("#stage-screen");
 const tutorialScreen = document.querySelector("#tutorial-screen");
+const certificateScreen = document.querySelector("#certificate-screen");
 const tutorialButton = document.querySelector("#tutorial-button");
 const stageButton = document.querySelector("#stage-button");
 const hardModeButton = document.querySelector("#hard-mode-button");
 const stageBackButton = document.querySelector("#stage-back");
+const certificateBackButton = document.querySelector("#certificate-back");
 const stageGrid = document.querySelector("#stage-grid");
 const endingButton = document.querySelector("#ending-button");
 const unlockStatus = document.querySelector("#unlock-status");
@@ -2199,8 +2201,9 @@ function setScreen(nextScreen) {
   startScreen.classList.toggle("hidden", nextScreen !== "start");
   stageScreen.classList.toggle("hidden", nextScreen !== "stage");
   tutorialScreen.classList.toggle("hidden", nextScreen !== "tutorial");
+  certificateScreen.classList.toggle("hidden", nextScreen !== "certificate");
   demoLabel.classList.toggle("hidden", !["demo", "stageDemo"].includes(nextScreen));
-  shell.classList.toggle("menu-mode", ["start", "stage", "tutorial"].includes(nextScreen));
+  shell.classList.toggle("menu-mode", ["start", "stage", "tutorial", "certificate"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
   shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo" || nextScreen === "ending");
   shell.classList.toggle("hard-mode", stageMode === "hard");
@@ -2223,6 +2226,12 @@ function showStageSelect(mode = stageMode) {
   state.buttons.clear();
   buildStageGrid();
   setScreen("stage");
+}
+
+function showHardCertificate() {
+  state.keys.clear();
+  state.buttons.clear();
+  setScreen("certificate");
 }
 
 function startGame(stageNumber = currentStageIndex + 1) {
@@ -2368,8 +2377,9 @@ function buildStageGrid() {
 
 function syncEndingButtons() {
   if (stageMode === "hard") {
-    endingButton.textContent = hardModePurchased() ? "ガチ全解除済み" : "ステージ2〜10解除 ¥500";
-    endingButton.disabled = hardModePurchased();
+    const certificateReady = hardStages.every((_, index) => clearedHardStages.has(index + 1));
+    endingButton.textContent = certificateReady ? "修了証" : hardModePurchased() ? "全課程クリアで修了証" : "ステージ2〜10解除 ¥500";
+    endingButton.disabled = hardModePurchased() && !certificateReady;
     return;
   }
   endingButton.textContent = "エンディング";
@@ -2424,11 +2434,16 @@ stageBackButton.addEventListener("click", showTitle);
 endingButton.addEventListener("click", (event) => {
   if (stageMode === "hard") {
     event.preventDefault();
+    if (hardStages.every((_, index) => clearedHardStages.has(index + 1))) {
+      showHardCertificate();
+      return;
+    }
     requestHardModePurchase();
     return;
   }
   if (!endingButton.disabled) startEnding();
 });
+certificateBackButton.addEventListener("click", () => showStageSelect("hard"));
 storyNextButton.addEventListener("click", () => {
   storyIndex += 1;
   if (storyIndex >= tutorialScenes.length) {
