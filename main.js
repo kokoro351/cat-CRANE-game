@@ -584,6 +584,15 @@ function buildStageReplay() {
   const saved = snapshotRunState();
   const previousScreen = appScreen;
   const profiles = replayProfilesForStage();
+  const excavatorProfile = profiles.find((profile) => profile.excavator);
+
+  if (excavatorProfile) {
+    restoreRunState(saved);
+    appScreen = previousScreen;
+    stageReplayStatus = "ready";
+    stageReplayProfile = { ...excavatorProfile };
+    return [{ t: 0, x: 0, y: 0, label: "COAST" }];
+  }
 
   for (const profile of profiles) {
     reset();
@@ -658,14 +667,15 @@ function replayProfilesForStage() {
   }
   if ((currentStage.machines || []).some((machine) => machine.kind === "excavator")) {
     return [
-      { speed: 46, lookAhead: 240, heightTolerance: 30, gateMargin: 36, maxTime: 120, excavator: true },
+      { speed: 42, lookAhead: 240, heightTolerance: 30, gateMargin: 36, maxTime: 150, excavator: true, safeGap: 560 },
+      { speed: 36, lookAhead: 240, heightTolerance: 30, gateMargin: 36, maxTime: 170, excavator: true, safeGap: 620 },
     ];
   }
   return base;
 }
 
 function referenceReplayInput(profile) {
-  if (profile.excavator) return referenceExcavatorInput();
+  if (profile.excavator) return referenceExcavatorInput(profile);
   if (profile.startDelay && state.stageTime < profile.startDelay) return labeledInput(0, 0);
   const targetRope = demoRopeTarget(state.distance + profile.lookAhead);
   const ropeError = targetRope - state.ropeLength;
@@ -697,7 +707,7 @@ function referenceTapHoldInput(profile) {
   return state.speed < profile.speed ? 1 : 0;
 }
 
-function referenceExcavatorInput() {
+function referenceExcavatorInput(profile = stageReplayProfile || {}) {
   const excavator = state.machines.find((machine) => machine.kind === "excavator");
   let x = 1;
   if (excavator) {
@@ -706,9 +716,9 @@ function referenceExcavatorInput() {
     const gap = hit.x - load.x;
     if (excavator.phase === "waiting") x = state.distance < excavator.triggerX + 20 ? 1 : 0;
     else if (excavator.phase === "left") x = 0;
-    else if (excavator.phase === "right") x = gap < 520 ? 0 : 1;
+    else if (excavator.phase === "right") x = gap < (profile.safeGap || 560) ? 0 : 1;
   }
-  if (x > 0 && state.speed < 46) {
+  if (x > 0 && state.speed < (profile.speed || 42)) {
     x = state.angle < -0.08 || state.angularVelocity > -0.18 ? 1 : 0;
   }
   return labeledInput(x, 0);
@@ -2174,12 +2184,15 @@ function bindMenuAction(button, action) {
 function bindDirection(button, direction) {
   const start = (event) => {
     event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
     if (state.result === "running") state.buttons.add(direction);
   };
   const stop = () => {
     state.buttons.delete(direction);
   };
   button.addEventListener("pointerdown", start);
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+  button.addEventListener("selectstart", (event) => event.preventDefault());
   button.addEventListener("pointerup", stop);
   button.addEventListener("pointerleave", stop);
   button.addEventListener("pointercancel", stop);

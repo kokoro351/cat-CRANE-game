@@ -15,11 +15,16 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
 body {
   min-height: 100%;
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -119,6 +124,9 @@ button {
   font-weight: 800;
   cursor: pointer;
   touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 button:active {
@@ -444,6 +452,7 @@ button:active {
   grid-template-areas:
     ". up ."
     "left down right";
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
 }
 
 .controls button {
