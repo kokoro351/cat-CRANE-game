@@ -194,17 +194,113 @@
 
       .arrow {
         position: absolute;
-        left: 490px;
-        top: 350px;
+        left: 474px;
+        top: 365px;
         display: grid;
         place-items: center;
-        width: 88px;
-        height: 64px;
+        width: 70px;
+        height: 54px;
         border-radius: 8px;
         background: var(--teal);
         color: white;
-        font-size: 44px;
+        font-size: 34px;
         font-weight: 900;
+      }
+
+      .gachinotch {
+        position: absolute;
+        z-index: 2;
+        left: 528px;
+        top: 332px;
+        display: grid;
+        grid-template-columns: 1fr 146px;
+        gap: 14px;
+        align-items: center;
+        width: 420px;
+        padding: 12px 14px;
+        border: 4px solid #25333f;
+        border-radius: 8px;
+        background: rgb(255 255 255 / 0.94);
+        box-shadow: 0 12px 24px rgb(23 33 43 / 18%);
+      }
+
+      .gachinotch h2,
+      .gachinotch p {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      .gachinotch h2 {
+        color: var(--accent);
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      .gachinotch p {
+        margin-top: 7px;
+        font-size: 17px;
+        font-weight: 1000;
+        line-height: 1.22;
+      }
+
+      .certificate-mini {
+        position: relative;
+        height: 92px;
+        padding: 12px 8px 8px;
+        border: 2px solid #2e5f52;
+        border-radius: 6px;
+        background: linear-gradient(#fbfaf2, #f6f0dc);
+        box-shadow: inset 0 0 0 5px rgb(46 95 82 / 0.12);
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .certificate-mini::before {
+        content: "thank you";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        color: rgb(46 95 82 / 0.12);
+        font-size: 18px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        transform: translate(-50%, -50%) rotate(-12deg);
+      }
+
+      .certificate-mini b,
+      .certificate-mini span {
+        position: relative;
+        display: block;
+      }
+
+      .certificate-mini b {
+        color: #2e5f52;
+        font-size: 18px;
+      }
+
+      .certificate-mini span {
+        margin-top: 8px;
+        border-top: 2px solid #78958c;
+        padding-top: 6px;
+        font-size: 13px;
+        font-weight: 1000;
+      }
+
+      .certificate-mini i {
+        position: absolute;
+        right: 9px;
+        bottom: 7px;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border: 3px double rgb(214 69 69 / 0.82);
+        border-radius: 50%;
+        color: rgb(214 69 69 / 0.88);
+        font-size: 10px;
+        font-style: normal;
+        font-weight: 1000;
+        transform: rotate(-10deg);
       }
 
       .goal {
@@ -246,6 +342,17 @@
       <div class="load"></div>
       <img class="cat" src="../assets/cat-beam-anime.png" alt="">
       <div class="arrow">→</div>
+      <div class="gachinotch">
+        <div>
+          <h2>ガチノッチ</h2>
+          <p>全課程クリアで<br>修了証がもらえるぞ！！</p>
+        </div>
+        <div class="certificate-mini">
+          <b>修了証</b>
+          <span>安全教育</span>
+          <i>ヨシ</i>
+        </div>
+      </div>
       <div class="goal"></div>
     </div>
     <section class="title">
