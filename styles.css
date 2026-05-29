@@ -206,6 +206,15 @@ button:active {
   min-height: 52px;
 }
 
+.privacy-link {
+  justify-self: center;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .secondary {
   background: #52616d;
 }
@@ -524,4 +533,63 @@ button:active {
   border-bottom: 3px solid var(--danger);
   background: rgb(255 255 255 / 0.98);
   transform: rotate(45deg);
+}
+
+.policy-page {
+  display: block;
+  min-height: 100vh;
+  padding: 18px;
+  overflow: auto;
+  background: #eef5f8;
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.policy-card {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 12px 30px rgb(23 33 43 / 10%);
+}
+
+.policy-card,
+.policy-card * {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.policy-card h1,
+.policy-card h2,
+.policy-card p {
+  margin: 0;
+}
+
+.policy-card h1 {
+  font-size: clamp(1.8rem, 7vw, 2.4rem);
+  line-height: 1.15;
+}
+
+.policy-card h2 {
+  margin-top: 22px;
+  font-size: 1.15rem;
+}
+
+.policy-card p {
+  margin-top: 10px;
+  color: #2e3a44;
+  line-height: 1.7;
+}
+
+.policy-card a {
+  color: var(--teal);
+  font-weight: 800;
+}
+
+.policy-date {
+  font-weight: 800;
 }

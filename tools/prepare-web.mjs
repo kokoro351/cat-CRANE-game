@@ -7,7 +7,7 @@ const outDir = join(root, "www");
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
 
-for (const entry of ["index.html", "styles.css", "main.js", "assets"]) {
+for (const entry of ["index.html", "privacy.html", "styles.css", "main.js", "assets"]) {
   await cp(join(root, entry), join(outDir, entry), { recursive: true });
 }
 

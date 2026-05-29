@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=430, initial-scale=1">
+    <title>Stage Select Screenshot</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+      body {
+        width: 430px;
+        min-height: 900px;
+      }
+
+      .shot-shell {
+        width: 430px;
+        min-height: 900px;
+        padding: 12px;
+        background: #eef5f8;
+      }
+
+      .shot-screen {
+        position: relative;
+        min-height: 876px;
+      }
+
+      .stage-grid button {
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shot-shell">
+      <section class="screen shot-screen">
+        <h2>ステージ選択</h2>
+        <p class="unlock-status">全ステージを自由にプレイできます</p>
+        <div class="stage-grid" aria-label="stage list">
+          <button type="button">1<b>CLEAR</b></button>
+          <button type="button">2<b>CLEAR</b></button>
+          <button type="button">3</button>
+          <button type="button">4</button>
+          <button type="button">5</button>
+          <button type="button">6</button>
+          <button type="button">7</button>
+          <button type="button">8</button>
+          <button type="button">9</button>
+          <button type="button">10</button>
+        </div>
+        <div class="ending-actions">
+          <button type="button">エンディング</button>
+        </div>
+        <button class="secondary" type="button">タイトルへ</button>
+      </section>
+    </main>
+  </body>
+</html>

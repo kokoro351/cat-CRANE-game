@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=430, initial-scale=1">
+    <title>Gameplay Screenshot</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+      body {
+        width: 430px;
+        min-height: 900px;
+      }
+
+      .game-shell {
+        width: 430px;
+        min-height: 900px;
+      }
+
+      .shot-field {
+        position: relative;
+        width: 390px;
+        height: 680px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: linear-gradient(#9fd9ff 0 62%, #f6d47c 62% 100%);
+        box-shadow: 0 12px 30px rgb(23 33 43 / 12%);
+      }
+
+      .rail {
+        position: absolute;
+        left: -20px;
+        right: -20px;
+        top: 56px;
+        height: 10px;
+        background: #263946;
+        box-shadow: 0 18px 0 #496270;
+      }
+
+      .factory {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 230px;
+        height: 110px;
+        opacity: 0.85;
+      }
+
+      .factory::before {
+        content: "";
+        position: absolute;
+        left: 18px;
+        bottom: 0;
+        width: 72px;
+        height: 92px;
+        border-left: 7px solid #506571;
+        border-right: 7px solid #506571;
+        background: linear-gradient(35deg, transparent 42%, #506571 43% 49%, transparent 50%),
+          linear-gradient(-35deg, transparent 42%, #506571 43% 49%, transparent 50%);
+      }
+
+      .factory::after {
+        content: "";
+        position: absolute;
+        left: 110px;
+        right: 38px;
+        bottom: 0;
+        height: 62px;
+        background: #627985;
+        clip-path: polygon(0 40%, 20% 0, 40% 40%, 60% 0, 80% 40%, 100% 0, 100% 100%, 0 100%);
+      }
+
+      .obstacle {
+        position: absolute;
+        left: 254px;
+        bottom: 205px;
+        width: 72px;
+        height: 176px;
+        border-radius: 8px;
+        background: #ad4739;
+        box-shadow: inset 0 0 0 8px rgb(255 255 255 / 0.18);
+      }
+
+      .goal {
+        position: absolute;
+        right: 24px;
+        bottom: 116px;
+        width: 8px;
+        height: 182px;
+        background: #17212b;
+      }
+
+      .goal::before {
+        content: "GOAL";
+        position: absolute;
+        right: 0;
+        top: 0;
+        display: grid;
+        place-items: center;
+        width: 86px;
+        height: 38px;
+        background: white;
+        color: var(--accent);
+        font-weight: 1000;
+      }
+
+      .trolley {
+        position: absolute;
+        left: 118px;
+        top: 36px;
+        width: 78px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--accent);
+      }
+
+      .rope {
+        position: absolute;
+        left: 151px;
+        top: 70px;
+        width: 5px;
+        height: 198px;
+        background: #17212b;
+        transform: rotate(-9deg);
+        transform-origin: top;
+      }
+
+      .cat {
+        position: absolute;
+        left: 116px;
+        top: 160px;
+        width: 154px;
+        filter: drop-shadow(0 10px 9px rgb(23 33 43 / 18%));
+        transform: rotate(-5deg);
+      }
+
+      .beam {
+        position: absolute;
+        left: 98px;
+        top: 306px;
+        width: 176px;
+        height: 34px;
+        border: 6px solid #445663;
+        background: repeating-linear-gradient(90deg, #758692 0 25px, #657580 25px 33px);
+        transform: rotate(-5deg);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="game-shell play-mode">
+      <section class="hud" aria-label="game status">
+        <div>
+          <p class="label">Distance</p>
+          <p><span>168</span>m</p>
+        </div>
+        <div>
+          <p class="label">Swing</p>
+          <p><span>11</span>&deg;</p>
+        </div>
+        <div class="hud-actions">
+          <button type="button">Restart</button>
+          <button class="secondary" type="button">ステージ</button>
+        </div>
+      </section>
+      <section class="play-area">
+        <div class="shot-field">
+          <div class="factory"></div>
+          <div class="rail"></div>
+          <div class="obstacle"></div>
+          <div class="goal"></div>
+          <div class="trolley"></div>
+          <div class="rope"></div>
+          <img class="cat" src="../assets/cat-beam-anime.png" alt="">
+          <div class="beam"></div>
+        </div>
+      </section>
+      <section class="controls" aria-label="game controls">
+        <button class="dir-up" type="button">&uarr;</button>
+        <button class="dir-left" type="button">&larr;</button>
+        <button class="dir-down" type="button">&darr;</button>
+        <button class="dir-right is-pressed" type="button">&rarr;</button>
+      </section>
+    </main>
+  </body>
+</html>

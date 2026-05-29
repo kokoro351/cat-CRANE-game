@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1024, initial-scale=1">
+    <title>Feature Graphic</title>
+    <style>
+      :root {
+        --ink: #17212b;
+        --sky: #a8dcff;
+        --floor: #f6d47c;
+        --accent: #ef5d43;
+        --teal: #159a9c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1024px;
+        height: 500px;
+        margin: 0;
+        overflow: hidden;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+      }
+
+      body {
+        position: relative;
+        background: linear-gradient(#93d3ff 0%, #ddf6ff 60%, var(--floor) 61%, #edc35f 100%);
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+      }
+
+      .factory {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 172px;
+        height: 148px;
+        opacity: 0.92;
+      }
+
+      .tower {
+        position: absolute;
+        bottom: 0;
+        width: 82px;
+        height: 142px;
+        border-left: 10px solid #496270;
+        border-right: 10px solid #496270;
+      }
+
+      .tower::before,
+      .tower::after {
+        content: "";
+        position: absolute;
+        left: -12px;
+        right: -12px;
+        height: 10px;
+        background: #496270;
+        transform: rotate(28deg);
+        transform-origin: center;
+      }
+
+      .tower::before {
+        top: 34px;
+      }
+
+      .tower::after {
+        top: 82px;
+        transform: rotate(-28deg);
+      }
+
+      .tower.a {
+        left: 80px;
+      }
+
+      .tower.b {
+        right: 132px;
+        transform: scale(1.18);
+      }
+
+      .chimney {
+        position: absolute;
+        left: 725px;
+        bottom: 0;
+        width: 58px;
+        height: 138px;
+        background: #506571;
+      }
+
+      .chimney::before {
+        content: "";
+        position: absolute;
+        left: -12px;
+        right: -12px;
+        top: -12px;
+        height: 18px;
+        background: #394c57;
+      }
+
+      .warehouse {
+        position: absolute;
+        left: 230px;
+        bottom: 0;
+        width: 360px;
+        height: 84px;
+        background: #67818c;
+        clip-path: polygon(0 34%, 20% 0, 40% 34%, 60% 0, 80% 34%, 100% 0, 100% 100%, 0 100%);
+      }
+
+      .crane-rail {
+        position: absolute;
+        left: -30px;
+        right: -30px;
+        top: 76px;
+        height: 18px;
+        background: #263946;
+        box-shadow: 0 18px 0 #496270;
+      }
+
+      .trolley {
+        position: absolute;
+        left: 592px;
+        top: 44px;
+        width: 118px;
+        height: 56px;
+        border-radius: 8px;
+        background: var(--accent);
+        box-shadow: inset 0 -10px 0 rgb(0 0 0 / 12%);
+      }
+
+      .rope {
+        position: absolute;
+        left: 642px;
+        top: 94px;
+        width: 8px;
+        height: 168px;
+        background: #17212b;
+        transform: rotate(-7deg);
+        transform-origin: top center;
+      }
+
+      .load {
+        position: absolute;
+        left: 562px;
+        top: 244px;
+        width: 236px;
+        height: 46px;
+        border: 8px solid #445663;
+        background: repeating-linear-gradient(90deg, #758692 0 34px, #657580 34px 44px);
+        transform: rotate(-5deg);
+        box-shadow: 0 14px 0 rgb(23 33 43 / 12%);
+      }
+
+      .cat {
+        position: absolute;
+        left: 610px;
+        top: 102px;
+        width: 206px;
+        filter: drop-shadow(0 14px 12px rgb(23 33 43 / 20%));
+        transform: rotate(-5deg);
+      }
+
+      .title {
+        position: absolute;
+        left: 54px;
+        top: 60px;
+        width: 455px;
+      }
+
+      .title h1 {
+        margin: 0;
+        font-size: 62px;
+        line-height: 1.02;
+        letter-spacing: 0;
+        text-shadow: 0 3px 0 rgb(255 255 255 / 0.72), 0 8px 22px rgb(255 255 255 / 0.58);
+      }
+
+      .title p {
+        width: 410px;
+        margin: 20px 0 0;
+        padding: 10px 18px;
+        border-radius: 8px;
+        background: rgb(255 255 255 / 0.92);
+        font-size: 24px;
+        font-weight: 900;
+      }
+
+      .arrow {
+        position: absolute;
+        left: 490px;
+        top: 350px;
+        display: grid;
+        place-items: center;
+        width: 88px;
+        height: 64px;
+        border-radius: 8px;
+        background: var(--teal);
+        color: white;
+        font-size: 44px;
+        font-weight: 900;
+      }
+
+      .goal {
+        position: absolute;
+        right: 54px;
+        bottom: 62px;
+        width: 98px;
+        height: 176px;
+        border-left: 10px solid #17212b;
+      }
+
+      .goal::before {
+        content: "GOAL";
+        position: absolute;
+        left: 8px;
+        top: 0;
+        display: grid;
+        place-items: center;
+        width: 118px;
+        height: 46px;
+        background: #fff;
+        color: var(--accent);
+        font-size: 24px;
+        font-weight: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene" aria-hidden="true">
+      <div class="factory">
+        <div class="tower a"></div>
+        <div class="warehouse"></div>
+        <div class="chimney"></div>
+        <div class="tower b"></div>
+      </div>
+      <div class="crane-rail"></div>
+      <div class="trolley"></div>
+      <div class="rope"></div>
+      <div class="load"></div>
+      <img class="cat" src="../assets/cat-beam-anime.png" alt="">
+      <div class="arrow">→</div>
+      <div class="goal"></div>
+    </div>
+    <section class="title">
+      <h1>追いノッチ<br>クレーン猫<br>チャレンジ</h1>
+      <p>揺れを読んで、鉄骨を運べ！</p>
+    </section>
+  </body>
+</html>
