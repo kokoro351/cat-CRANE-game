@@ -219,6 +219,10 @@ button:active {
   background: #52616d;
 }
 
+.hard-mode-entry {
+  background: #25333f;
+}
+
 .stage-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -240,6 +244,19 @@ button:active {
   color: #eef5f8;
 }
 
+.stage-grid button.locked-stage {
+  background: #394752;
+  color: #fff;
+}
+
+.stage-grid button.locked-stage span::after {
+  content: "¥500";
+  display: block;
+  margin-top: 3px;
+  color: #f0b429;
+  font-size: 0.72rem;
+}
+
 .stage-grid button b {
   position: absolute;
   inset: auto -22px 6px auto;
@@ -251,6 +268,14 @@ button:active {
   letter-spacing: 0;
   transform: rotate(-16deg);
   box-shadow: 0 3px 8px rgb(23 33 43 / 18%);
+}
+
+.stage-grid small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  opacity: 0.82;
 }
 
 .ending-actions {
@@ -462,6 +487,23 @@ button:active {
     ". up ."
     "left down right";
   padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+.hard-mode .controls {
+  grid-template-columns: 1fr;
+  grid-template-rows: 68px;
+  grid-template-areas: "right";
+}
+
+.hard-mode .dir-left,
+.hard-mode .dir-up,
+.hard-mode .dir-down {
+  display: none;
+}
+
+.hard-mode .controls button {
+  min-height: 68px;
+  font-size: 2rem;
 }
 
 .controls button {

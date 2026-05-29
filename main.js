@@ -14,6 +14,7 @@ const stageScreen = document.querySelector("#stage-screen");
 const tutorialScreen = document.querySelector("#tutorial-screen");
 const tutorialButton = document.querySelector("#tutorial-button");
 const stageButton = document.querySelector("#stage-button");
+const hardModeButton = document.querySelector("#hard-mode-button");
 const stageBackButton = document.querySelector("#stage-back");
 const stageGrid = document.querySelector("#stage-grid");
 const endingButton = document.querySelector("#ending-button");
@@ -45,6 +46,8 @@ const visibleWorld = W - 148;
 const dangerAngle = 34;
 const warningAngle = 24;
 const clearedStagesKey = "catCrane.clearedStages";
+const clearedHardStagesKey = "catCrane.hardClearedStages";
+const hardModePurchasedKey = "catCrane.hardModePurchased";
 const beamSpriteWidth = 96;
 const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
 const obstacleHeightScale = 0.72;
@@ -300,9 +303,139 @@ const stages = [
   },
 ];
 stages.length = 10;
+const hardStages = [
+  {
+    name: "ガチ1",
+    label: "初期型",
+    type: "carry",
+    distance: 1450,
+    noCat: true,
+    ropeLength: 190,
+    initialAngle: 0.16,
+    physics: { returnScale: 0.46, accelPower: 132, accelResponse: 18, coastBrake: 10, maxSpeed: 118, accelDivisor: 30, damping: 0.9992 },
+    dangerAngle: 25,
+  },
+  {
+    name: "ガチ2",
+    label: "軽量・揺れ止め",
+    type: "dampen",
+    noCat: true,
+    ropeLength: 158,
+    initialAngle: 0.34,
+    initialAngularVelocity: -0.18,
+    physics: { returnScale: 0.52, accelPower: 126, accelResponse: 22, coastBrake: 9, maxSpeed: 105, accelDivisor: 32, damping: 0.999 },
+    successAngle: 3.8,
+    successSpeed: 8,
+    successHold: 1.2,
+    dangerAngle: 28,
+  },
+  {
+    name: "ガチ3",
+    label: "重荷",
+    type: "carry",
+    distance: 1300,
+    noCat: true,
+    ropeLength: 178,
+    initialAngle: 0.12,
+    physics: { returnScale: 0.48, accelPower: 102, accelResponse: 16, coastBrake: 8, maxSpeed: 94, accelDivisor: 37, damping: 0.9991 },
+    dangerAngle: 24,
+  },
+  {
+    name: "ガチ4",
+    label: "長尺・揺れ止め",
+    type: "dampen",
+    noCat: true,
+    ropeLength: 250,
+    initialAngle: -0.30,
+    initialAngularVelocity: 0.11,
+    physics: { returnScale: 0.42, accelPower: 122, accelResponse: 18, coastBrake: 8, maxSpeed: 104, accelDivisor: 34, damping: 0.99925 },
+    successAngle: 3.4,
+    successSpeed: 7,
+    successHold: 1.4,
+    dangerAngle: 25,
+  },
+  {
+    name: "ガチ5",
+    label: "短尺高速",
+    type: "carry",
+    distance: 1200,
+    noCat: true,
+    ropeLength: 124,
+    initialAngle: 0.18,
+    physics: { returnScale: 0.62, accelPower: 148, accelResponse: 24, coastBrake: 11, maxSpeed: 128, accelDivisor: 29, damping: 0.9989 },
+    dangerAngle: 24,
+  },
+  {
+    name: "ガチ6",
+    label: "重荷・揺れ止め",
+    type: "dampen",
+    noCat: true,
+    ropeLength: 198,
+    initialAngle: 0.28,
+    initialAngularVelocity: 0.16,
+    physics: { returnScale: 0.45, accelPower: 96, accelResponse: 15, coastBrake: 7, maxSpeed: 88, accelDivisor: 40, damping: 0.99935 },
+    successAngle: 3.2,
+    successSpeed: 6,
+    successHold: 1.5,
+    dangerAngle: 24,
+  },
+  {
+    name: "ガチ7",
+    label: "長距離",
+    type: "carry",
+    distance: 1650,
+    noCat: true,
+    ropeLength: 220,
+    initialAngle: -0.14,
+    physics: { returnScale: 0.43, accelPower: 118, accelResponse: 17, coastBrake: 8, maxSpeed: 108, accelDivisor: 34, damping: 0.99925 },
+    dangerAngle: 23,
+  },
+  {
+    name: "ガチ8",
+    label: "逆振れ始動",
+    type: "dampen",
+    noCat: true,
+    ropeLength: 182,
+    initialAngle: -0.32,
+    initialAngularVelocity: -0.12,
+    physics: { returnScale: 0.50, accelPower: 128, accelResponse: 20, coastBrake: 9, maxSpeed: 106, accelDivisor: 33, damping: 0.9991 },
+    successAngle: 3.0,
+    successSpeed: 6,
+    successHold: 1.5,
+    dangerAngle: 23,
+  },
+  {
+    name: "ガチ9",
+    label: "超重量",
+    type: "carry",
+    distance: 1400,
+    noCat: true,
+    ropeLength: 210,
+    initialAngle: 0.15,
+    physics: { returnScale: 0.40, accelPower: 84, accelResponse: 13, coastBrake: 6, maxSpeed: 78, accelDivisor: 44, damping: 0.9994 },
+    dangerAngle: 22,
+  },
+  {
+    name: "ガチ10",
+    label: "最終揺れ止め",
+    type: "dampen",
+    noCat: true,
+    ropeLength: 236,
+    initialAngle: 0.36,
+    initialAngularVelocity: -0.08,
+    physics: { returnScale: 0.38, accelPower: 110, accelResponse: 16, coastBrake: 7, maxSpeed: 96, accelDivisor: 38, damping: 0.99935 },
+    successAngle: 2.6,
+    successSpeed: 5,
+    successHold: 1.8,
+    dangerAngle: 22,
+  },
+];
 let currentStageIndex = 0;
 let currentStage = stages[currentStageIndex];
 let clearedStages = loadClearedStages();
+let clearedHardStages = loadClearedStages(clearedHardStagesKey);
+let stageMode = "normal";
+let dampenHold = 0;
 const tutorialScenes = [
   {
     title: "シーン 1",
@@ -361,13 +494,13 @@ let stageReplayStatus = "empty";
 let endingTime = 0;
 
 function reset() {
-  goalDistance = currentStage.distance;
+  goalDistance = currentStage.distance || 900;
   state.distance = 0;
   state.speed = 0;
   state.accel = 0;
-  state.ropeLength = 142;
-  state.angle = 0.08;
-  state.angularVelocity = 0;
+  state.ropeLength = currentStage.ropeLength || 142;
+  state.angle = currentStage.initialAngle ?? 0.08;
+  state.angularVelocity = currentStage.initialAngularVelocity || 0;
   state.result = "running";
   state.message = "";
   state.last = performance.now();
@@ -384,6 +517,7 @@ function reset() {
     phase: machine.kind === "excavator" ? "waiting" : "chasing",
   }));
   state.switches = {};
+  dampenHold = 0;
   state.keys.clear();
   state.buttons.clear();
   updateHud();
@@ -401,9 +535,9 @@ function toDeg(rad) {
 function readInput() {
   if (appScreen === "demo" || appScreen === "stageDemo") return demoInput;
   const right = state.keys.has("ArrowRight") || state.keys.has("d") || state.buttons.has("right");
-  const left = state.keys.has("ArrowLeft") || state.keys.has("a") || state.buttons.has("left");
-  const up = state.keys.has("ArrowUp") || state.keys.has("w") || state.buttons.has("up");
-  const down = state.keys.has("ArrowDown") || state.keys.has("s") || state.buttons.has("down");
+  const left = stageMode !== "hard" && (state.keys.has("ArrowLeft") || state.keys.has("a") || state.buttons.has("left"));
+  const up = stageMode !== "hard" && (state.keys.has("ArrowUp") || state.keys.has("w") || state.buttons.has("up"));
+  const down = stageMode !== "hard" && (state.keys.has("ArrowDown") || state.keys.has("s") || state.buttons.has("down"));
   return {
     x: Number(right) - Number(left),
     y: Number(down) - Number(up),
@@ -446,11 +580,20 @@ function step(now) {
 
 function updatePhysics(dt, input = readInput(), allowEnd = true) {
   const windCenter = currentStage.windCenter || 0;
-  const targetAccel = input.x !== 0 ? input.x * driveAccelPower : state.speed === 0 ? 0 : -Math.sign(state.speed) * driveCoastBrake;
-  state.accel += (targetAccel - state.accel) * Math.min(1, dt * driveAccelResponse);
+  const physics = currentStage.physics || {};
+  const accelPower = physics.accelPower || driveAccelPower;
+  const accelResponse = physics.accelResponse || driveAccelResponse;
+  const coastBrake = physics.coastBrake || driveCoastBrake;
+  const maxSpeed = physics.maxSpeed || maxForwardSpeed;
+  const accelDivisor = physics.accelDivisor || trolleyAccelDivisor;
+  const returnScale = physics.returnScale || pendulumReturnScale;
+  const damping = physics.damping || 0.998;
+  const stageDangerAngle = currentStage.dangerAngle || dangerAngle;
+  const targetAccel = input.x !== 0 ? input.x * accelPower : state.speed === 0 ? 0 : -Math.sign(state.speed) * coastBrake;
+  state.accel += (targetAccel - state.accel) * Math.min(1, dt * accelResponse);
 
   const previousSpeed = state.speed;
-  state.speed = Math.max(-58, Math.min(maxForwardSpeed, state.speed + state.accel * dt));
+  state.speed = Math.max(-58, Math.min(maxSpeed, state.speed + state.accel * dt));
   if (input.x === 0 && Math.abs(state.speed) < 2) state.speed = 0;
   const actualTrolleyAccel = (state.speed - previousSpeed) / Math.max(dt, 0.0001);
   const windDrift = input.x === 0 && windCenter ? Math.sign(windCenter) * 10 : 0;
@@ -460,15 +603,15 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
 
   const gravity = 9.8;
   const lengthMeters = state.ropeLength / 58;
-  const trolleyAccel = actualTrolleyAccel / trolleyAccelDivisor;
-  const pendulumForce = -(gravity * pendulumReturnScale / lengthMeters) * Math.sin(state.angle - windCenter) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
+  const trolleyAccel = actualTrolleyAccel / accelDivisor;
+  const pendulumForce = -(gravity * returnScale / lengthMeters) * Math.sin(state.angle - windCenter) - (trolleyAccel / lengthMeters) * Math.cos(state.angle);
   state.angularVelocity += pendulumForce * dt;
-  state.angularVelocity *= 0.998;
+  state.angularVelocity *= damping;
   state.angle += state.angularVelocity * dt;
 
   if (!allowEnd) return;
 
-  if (Math.abs(toDeg(state.angle)) >= dangerAngle) {
+  if (Math.abs(toDeg(state.angle)) >= stageDangerAngle) {
     state.result = "dropped";
     state.message = "Thrown off!";
     const load = loadPosition();
@@ -482,23 +625,52 @@ function updatePhysics(dt, input = readInput(), allowEnd = true) {
     state.result = "cleared";
     state.message = "Goal!";
     state.distance = goalDistance;
-    markStageCleared(currentStageIndex + 1);
+    markCurrentStageCleared();
+  } else if (currentStage.type === "dampen" && hasDampened(dt)) {
+    state.result = "cleared";
+    state.message = "Damped!";
+    markCurrentStageCleared();
   }
 }
 
-function loadClearedStages() {
+function hasDampened(dt) {
+  const swing = Math.abs(toDeg(state.angle));
+  const speed = Math.abs(state.speed);
+  const angular = Math.abs(toDeg(state.angularVelocity));
+  const clear = swing <= (currentStage.successAngle || 3)
+    && speed <= (currentStage.successSpeed || 6)
+    && angular <= 9
+    && state.stageTime > 1.2;
+  dampenHold = clear ? dampenHold + dt : 0;
+  return dampenHold >= (currentStage.successHold || 1.2);
+}
+
+function loadClearedStages(key = clearedStagesKey) {
   try {
-    const parsed = JSON.parse(localStorage.getItem(clearedStagesKey) || "[]");
+    const parsed = JSON.parse(localStorage.getItem(key) || "[]");
     return new Set(Array.isArray(parsed) ? parsed.filter(Number.isInteger) : []);
   } catch {
     return new Set();
   }
 }
 
+function activeClearedStages() {
+  return stageMode === "hard" ? clearedHardStages : clearedStages;
+}
+
+function activeClearedStagesKey() {
+  return stageMode === "hard" ? clearedHardStagesKey : clearedStagesKey;
+}
+
 function markStageCleared(stageNumber) {
-  if (clearedStages.has(stageNumber)) return;
-  clearedStages.add(stageNumber);
-  localStorage.setItem(clearedStagesKey, JSON.stringify([...clearedStages]));
+  const cleared = activeClearedStages();
+  if (cleared.has(stageNumber)) return;
+  cleared.add(stageNumber);
+  localStorage.setItem(activeClearedStagesKey(), JSON.stringify([...cleared]));
+}
+
+function markCurrentStageCleared() {
+  markStageCleared(currentStageIndex + 1);
 }
 
 function throwLoad(x, y) {
@@ -726,7 +898,7 @@ function referenceExcavatorInput(profile = stageReplayProfile || {}) {
 
 function referenceShouldWait(profile, ropeError) {
   const load = loadWorldPosition();
-  const closedGate = currentStage.gates.some((gate) => {
+  const closedGate = (currentStage.gates || []).some((gate) => {
     if (gateIsOpen(gate)) return false;
     const distanceToGate = gate.x - load.x;
     if (distanceToGate < 45 || distanceToGate > 190) return false;
@@ -856,14 +1028,14 @@ function demoRopeTarget(distance) {
     return Math.max(minRopeLength + 10, Math.min(maxRopeLength - 10, avoidY - railY - 34));
   }
 
-  const nearbyGate = currentStage.gates
+  const nearbyGate = (currentStage.gates || [])
     .filter((gate) => gate.x + gate.w > load.x - 100 && gate.x < load.x + Math.max(280, distance - load.x + 140))
     .sort((a, b) => Math.max(0, a.x - load.x) - Math.max(0, b.x - load.x))[0];
   if (nearbyGate) {
     return Math.max(minRopeLength + 10, Math.min(maxRopeLength - 10, gateGapY(nearbyGate) - 204));
   }
 
-  const nearbyObstacle = currentStage.obstacles
+  const nearbyObstacle = (currentStage.obstacles || [])
     .filter((obstacle) => obstacle.x + obstacle.w > load.x - 120 && obstacle.x < load.x + Math.max(320, distance - load.x + 180))
     .sort((a, b) => Math.max(0, a.x - load.x) - Math.max(0, b.x - load.x))[0];
   if (nearbyObstacle) {
@@ -910,8 +1082,8 @@ function hitStageHazard() {
   if (appScreen !== "game" && appScreen !== "stageDemo") return false;
   const points = loadHitboxPoints(loadWorldPosition(), state.angle * 0.55);
   updateSwitches(points);
-  return currentStage.obstacles.some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
-    || currentStage.gates.some((gate) => points.some((point) => pointHitsGate(point, gate)))
+  return (currentStage.obstacles || []).some((obstacle) => points.some((point) => pointInRect(point, adjustedObstacle(obstacle))))
+    || (currentStage.gates || []).some((gate) => points.some((point) => pointHitsGate(point, gate)))
     || (currentStage.swingGates || []).some((gate) => points.some((point) => pointHitsSwingGate(point, gate)))
     || state.machines.some((machine) => points.some((point) => pointInRect(point, machineHitRect(machine))))
     || activeProjectiles().some((projectile) => points.some((point) => pointInRect(point, projectile.rect)));
@@ -1161,8 +1333,8 @@ function drawTrack() {
 function drawStageHazards() {
   if (appScreen !== "game" && appScreen !== "stageDemo") return;
   (currentStage.switches || []).forEach(drawSwitch);
-  currentStage.obstacles.forEach(drawObstacle);
-  currentStage.gates.forEach(drawGate);
+  (currentStage.obstacles || []).forEach(drawObstacle);
+  (currentStage.gates || []).forEach(drawGate);
   (currentStage.swingGates || []).forEach(drawSwingGate);
   state.machines.forEach(drawMachine);
   activeProjectiles().forEach(drawProjectile);
@@ -1655,7 +1827,7 @@ function drawSteelBeam(x, y, rotation) {
   ctx.translate(x, y);
   ctx.rotate(rotation);
 
-  if (beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
+  if (!currentStage.noCat && beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
     const width = beamSpriteWidth;
     const scale = width / beamCatSprite.naturalWidth;
     const height = beamCatSprite.naturalHeight * scale;
@@ -1681,15 +1853,16 @@ function drawSteelBeam(x, y, rotation) {
   ctx.lineTo(38, 4);
   ctx.stroke();
 
-  drawBeamCat();
+  if (!currentStage.noCat) drawBeamCat();
 
   ctx.restore();
 }
 
 function swingColor() {
   const swing = Math.abs(toDeg(state.angle));
-  if (swing >= warningAngle) return "#d64545";
-  if (swing >= warningAngle * 0.65) return "#f0b429";
+  const limit = currentStage.dangerAngle || dangerAngle;
+  if (swing >= limit * 0.82) return "#d64545";
+  if (swing >= limit * 0.55) return "#f0b429";
   return "#25333f";
 }
 
@@ -1697,8 +1870,8 @@ function drawMeters() {
   const barX = 34;
   const barY = H - 54;
   const barW = W - 68;
-  const progress = state.distance / goalDistance;
-  const swing = Math.min(1, Math.abs(toDeg(state.angle)) / dangerAngle);
+  const progress = currentStage.type === "dampen" ? Math.min(1, dampenHold / (currentStage.successHold || 1.2)) : state.distance / goalDistance;
+  const swing = Math.min(1, Math.abs(toDeg(state.angle)) / (currentStage.dangerAngle || dangerAngle));
 
   ctx.fillStyle = "rgb(255 255 255 / 0.78)";
   ctx.fillRect(barX, barY - 38, barW, 16);
@@ -1716,7 +1889,8 @@ function drawMeters() {
 
   ctx.fillStyle = "#17212b";
   ctx.font = "700 12px system-ui, sans-serif";
-  ctx.fillText(`${currentStage.name}  Input: ${readInput().label}  Speed: ${Math.round(state.speed)}`, barX, barY - 48);
+  const objective = currentStage.type === "dampen" ? "Dampen hold" : "Distance";
+  ctx.fillText(`${currentStage.name}  ${objective}  Input: ${readInput().label}  Speed: ${Math.round(state.speed)}`, barX, barY - 48);
   ctx.fillText("Swing limit", barX, barY - 7);
 }
 
@@ -1726,14 +1900,14 @@ function drawResult() {
 }
 
 function resultDetailText() {
-  if (state.result === "cleared") return `${currentStage.name} cleared.`;
+  if (state.result === "cleared") return currentStage.type === "dampen" ? "揺れ止め完了。" : `${currentStage.name} cleared.`;
   return state.message === "Crash!" ? "Hit the obstacle." : "Too much swing.";
 }
 
 function syncResultPanel() {
   const visible = appScreen === "game" && state.result !== "running";
   resultPanel.classList.toggle("hidden", !visible);
-  resultAutoBtn.classList.toggle("hidden", !visible || state.result !== "dropped");
+  resultAutoBtn.classList.toggle("hidden", !visible || state.result !== "dropped" || stageMode === "hard");
   if (!visible) return;
   resultTitle.textContent = state.message;
   resultText.textContent = resultDetailText();
@@ -2029,6 +2203,7 @@ function setScreen(nextScreen) {
   shell.classList.toggle("menu-mode", ["start", "stage", "tutorial"].includes(nextScreen));
   shell.classList.toggle("demo-mode", nextScreen === "demo");
   shell.classList.toggle("play-mode", nextScreen === "game" || nextScreen === "stageDemo" || nextScreen === "ending");
+  shell.classList.toggle("hard-mode", stageMode === "hard");
   resultPanel.classList.add("hidden");
   if (nextScreen !== "stageDemo") stageDemoAutoClear = false;
   if (nextScreen !== "demo" && nextScreen !== "stageDemo") {
@@ -2038,10 +2213,12 @@ function setScreen(nextScreen) {
 }
 
 function showTitle() {
+  stageMode = "normal";
   setScreen("start");
 }
 
-function showStageSelect() {
+function showStageSelect(mode = stageMode) {
+  stageMode = mode;
   state.keys.clear();
   state.buttons.clear();
   buildStageGrid();
@@ -2050,9 +2227,10 @@ function showStageSelect() {
 
 function startGame(stageNumber = currentStageIndex + 1) {
   if (typeof stageNumber !== "number") stageNumber = currentStageIndex + 1;
-  currentStageIndex = Math.max(0, Math.min(stages.length - 1, stageNumber - 1));
-  currentStage = stages[currentStageIndex];
-  goalDistance = currentStage.distance;
+  const activeStages = stageMode === "hard" ? hardStages : stages;
+  currentStageIndex = Math.max(0, Math.min(activeStages.length - 1, stageNumber - 1));
+  currentStage = activeStages[currentStageIndex];
+  goalDistance = currentStage.distance || 900;
   reset();
   setScreen("game");
 }
@@ -2148,22 +2326,53 @@ function syncDemoCues() {
   }
 }
 
+function hardModePurchased() {
+  return localStorage.getItem(hardModePurchasedKey) === "true";
+}
+
+function requestHardModePurchase() {
+  const confirmed = window.confirm("ガチ追いノッチモード ステージ2〜10は500円購入予定です。\n\n現在はGoogle Play Billing接続前のテスト解除として扱います。解除しますか？");
+  if (!confirmed) return;
+  localStorage.setItem(hardModePurchasedKey, "true");
+  buildStageGrid();
+}
+
 function buildStageGrid() {
   stageGrid.innerHTML = "";
-  unlockStatus.textContent = "全ステージを選択できます";
-  for (let i = 1; i <= stages.length; i += 1) {
-    const cleared = clearedStages.has(i);
+  const activeStages = stageMode === "hard" ? hardStages : stages;
+  const cleared = activeClearedStages();
+  const purchased = stageMode !== "hard" || hardModePurchased();
+  stageScreen.querySelector("h2").textContent = stageMode === "hard" ? "ガチ追いノッチ" : "ステージ選択";
+  unlockStatus.textContent = stageMode === "hard"
+    ? (purchased ? "全10ステージ解除済み。右ボタンだけでリアルな揺れ止めに挑戦。" : "ステージ1は無料。ステージ2〜10は500円購入で解除予定。")
+    : "全ステージを選択できます";
+  for (let i = 1; i <= activeStages.length; i += 1) {
+    const isLocked = stageMode === "hard" && i >= 2 && !purchased;
+    const isCleared = cleared.has(i);
     const button = document.createElement("button");
     button.type = "button";
-    button.classList.toggle("cleared-stage", cleared);
-    button.innerHTML = `<span>${stages[i - 1].name}</span>${cleared ? "<b>CLEAR</b>" : ""}`;
-    button.addEventListener("click", () => startGame(i));
+    button.classList.toggle("cleared-stage", isCleared);
+    button.classList.toggle("locked-stage", isLocked);
+    button.innerHTML = `<span>${activeStages[i - 1].name}<small>${activeStages[i - 1].label || ""}</small></span>${isCleared ? "<b>CLEAR</b>" : ""}`;
+    button.addEventListener("click", () => {
+      if (isLocked) {
+        requestHardModePurchase();
+        return;
+      }
+      startGame(i);
+    });
     stageGrid.append(button);
   }
   syncEndingButtons();
 }
 
 function syncEndingButtons() {
+  if (stageMode === "hard") {
+    endingButton.textContent = hardModePurchased() ? "ガチ全解除済み" : "ステージ2〜10解除 ¥500";
+    endingButton.disabled = hardModePurchased();
+    return;
+  }
+  endingButton.textContent = "エンディング";
   const endingReady = stages.every((_, index) => clearedStages.has(index + 1));
   endingButton.disabled = !endingReady;
 }
@@ -2209,9 +2418,15 @@ bindMenuAction(resultRestartBtn, () => startGame());
 bindMenuAction(resultStageBtn, showStageSelect);
 bindMenuAction(resultAutoBtn, startStageAutoClear);
 tutorialButton.addEventListener("click", startTutorial);
-stageButton.addEventListener("click", showStageSelect);
+stageButton.addEventListener("click", () => showStageSelect("normal"));
+hardModeButton.addEventListener("click", () => showStageSelect("hard"));
 stageBackButton.addEventListener("click", showTitle);
-endingButton.addEventListener("click", () => {
+endingButton.addEventListener("click", (event) => {
+  if (stageMode === "hard") {
+    event.preventDefault();
+    requestHardModePurchase();
+    return;
+  }
   if (!endingButton.disabled) startEnding();
 });
 storyNextButton.addEventListener("click", () => {
