@@ -2340,7 +2340,7 @@ function hardModePurchased() {
 }
 
 function requestHardModePurchase() {
-  const confirmed = window.confirm("ガチ追いノッチモード ステージ2〜10は500円購入予定です。\n\n現在はGoogle Play Billing接続前のテスト解除として扱います。解除しますか？");
+  const confirmed = window.confirm("ガチノッチ ステージ2〜10は500円購入予定です。\n\n現在はGoogle Play Billing接続前のテスト解除として扱います。解除しますか？");
   if (!confirmed) return;
   localStorage.setItem(hardModePurchasedKey, "true");
   buildStageGrid();
@@ -2351,7 +2351,7 @@ function buildStageGrid() {
   const activeStages = stageMode === "hard" ? hardStages : stages;
   const cleared = activeClearedStages();
   const purchased = stageMode !== "hard" || hardModePurchased();
-  stageScreen.querySelector("h2").textContent = stageMode === "hard" ? "ガチ追いノッチ" : "ステージ選択";
+  stageScreen.querySelector("h2").textContent = stageMode === "hard" ? "ガチノッチ" : "ステージ選択";
   unlockStatus.textContent = stageMode === "hard"
     ? (purchased ? "全10ステージ解除済み。右ボタンだけでリアルな揺れ止めに挑戦。" : "ステージ1は無料。ステージ2〜10は500円購入で解除予定。")
     : "全ステージを選択できます";

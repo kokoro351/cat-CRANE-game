@@ -4,7 +4,7 @@
 
 - `store-assets/play-console-copy-paste-ja.md`: Play Consoleの各入力欄へ貼る文章
 - `store-assets/tester-recruitment-ja.md`: クローズドテスト参加者へ送る募集文
-- `store-assets/billing-plan-ja.md`: ガチ追いノッチモードの500円課金導入メモ
+- `store-assets/billing-plan-ja.md`: ガチノッチの500円課金導入メモ
 
 ## すぐ入力できる項目
 
