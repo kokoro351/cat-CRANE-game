@@ -1,5 +1,10 @@
 # Play Console 提出チェックリスト
 
+## 入力用メモ
+
+- `store-assets/play-console-copy-paste-ja.md`: Play Consoleの各入力欄へ貼る文章
+- `store-assets/tester-recruitment-ja.md`: クローズドテスト参加者へ送る募集文
+
 ## すぐ入力できる項目
 
 - アプリ名: 追いノッチ -クレーン猫 チャレンジ-
