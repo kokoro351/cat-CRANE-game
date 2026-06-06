@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        width: 512px;
+        height: 512px;
+        margin: 0;
+        overflow: hidden;
+      }
+      body {
+        position: relative;
+        background: linear-gradient(#8dd2fb 0 68%, #f2ca68 68% 100%);
+      }
+      .rail {
+        position: absolute;
+        left: -20px;
+        right: -20px;
+        top: 58px;
+        height: 22px;
+        background: #263946;
+        box-shadow: 0 18px 0 #496270;
+      }
+      .trolley {
+        position: absolute;
+        left: 196px;
+        top: 28px;
+        width: 120px;
+        height: 62px;
+        border-radius: 8px;
+        background: #ef5d43;
+      }
+      .cat {
+        position: absolute;
+        left: 84px;
+        top: 58px;
+        width: 344px;
+        filter: drop-shadow(0 16px 12px rgb(23 33 43 / 22%));
+      }
+      .mark {
+        position: absolute;
+        right: 30px;
+        bottom: 28px;
+        display: grid;
+        place-items: center;
+        width: 88px;
+        height: 88px;
+        border: 7px double #d64545;
+        border-radius: 50%;
+        color: #d64545;
+        background: rgb(255 255 255 / 78%);
+        font: 1000 24px system-ui, sans-serif;
+        transform: rotate(-10deg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="rail"></div>
+    <div class="trolley"></div>
+    <img class="cat" src="../assets/cat-beam-anime.png" alt="">
+    <div class="mark">ヨシ</div>
+  </body>
+</html>
