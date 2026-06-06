@@ -49,7 +49,6 @@ const dangerAngle = 34;
 const warningAngle = 24;
 const clearedStagesKey = "catCrane.clearedStages";
 const clearedHardStagesKey = "catCrane.hardClearedStages";
-const hardModePurchasedKey = "catCrane.hardModePurchased";
 const beamSpriteWidth = 96;
 const loadHitbox = { left: -40, right: 40, top: 16, bottom: 132 };
 const obstacleHeightScale = 0.72;
@@ -2335,41 +2334,21 @@ function syncDemoCues() {
   }
 }
 
-function hardModePurchased() {
-  return localStorage.getItem(hardModePurchasedKey) === "true";
-}
-
-function requestHardModePurchase() {
-  const confirmed = window.confirm("ガチノッチ ステージ2〜10は500円購入予定です。\n\n現在はGoogle Play Billing接続前のテスト解除として扱います。解除しますか？");
-  if (!confirmed) return;
-  localStorage.setItem(hardModePurchasedKey, "true");
-  buildStageGrid();
-}
-
 function buildStageGrid() {
   stageGrid.innerHTML = "";
   const activeStages = stageMode === "hard" ? hardStages : stages;
   const cleared = activeClearedStages();
-  const purchased = stageMode !== "hard" || hardModePurchased();
   stageScreen.querySelector("h2").textContent = stageMode === "hard" ? "ガチノッチ" : "ステージ選択";
   unlockStatus.textContent = stageMode === "hard"
-    ? (purchased ? "全10ステージ解除済み。右ボタンだけでリアルな揺れ止めに挑戦。" : "ステージ1は無料。ステージ2〜10は500円購入で解除予定。")
+    ? "全10ステージをプレイできます。右ボタンだけでリアルな揺れ止めに挑戦。"
     : "全ステージを選択できます";
   for (let i = 1; i <= activeStages.length; i += 1) {
-    const isLocked = stageMode === "hard" && i >= 2 && !purchased;
     const isCleared = cleared.has(i);
     const button = document.createElement("button");
     button.type = "button";
     button.classList.toggle("cleared-stage", isCleared);
-    button.classList.toggle("locked-stage", isLocked);
     button.innerHTML = `<span>${activeStages[i - 1].name}<small>${activeStages[i - 1].label || ""}</small></span>${isCleared ? "<b>CLEAR</b>" : ""}`;
-    button.addEventListener("click", () => {
-      if (isLocked) {
-        requestHardModePurchase();
-        return;
-      }
-      startGame(i);
-    });
+    button.addEventListener("click", () => startGame(i));
     stageGrid.append(button);
   }
   syncEndingButtons();
@@ -2378,8 +2357,8 @@ function buildStageGrid() {
 function syncEndingButtons() {
   if (stageMode === "hard") {
     const certificateReady = hardStages.every((_, index) => clearedHardStages.has(index + 1));
-    endingButton.textContent = certificateReady ? "修了証" : hardModePurchased() ? "全課程クリアで修了証" : "ステージ2〜10解除 ¥500";
-    endingButton.disabled = hardModePurchased() && !certificateReady;
+    endingButton.textContent = certificateReady ? "修了証" : "全課程クリアで修了証";
+    endingButton.disabled = !certificateReady;
     return;
   }
   endingButton.textContent = "エンディング";
@@ -2438,7 +2417,6 @@ endingButton.addEventListener("click", (event) => {
       showHardCertificate();
       return;
     }
-    requestHardModePurchase();
     return;
   }
   if (!endingButton.disabled) startEnding();

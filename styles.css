@@ -248,19 +248,6 @@ button:active {
   color: #eef5f8;
 }
 
-.stage-grid button.locked-stage {
-  background: #394752;
-  color: #fff;
-}
-
-.stage-grid button.locked-stage span::after {
-  content: "¥500";
-  display: block;
-  margin-top: 3px;
-  color: #f0b429;
-  font-size: 0.72rem;
-}
-
 .stage-grid button b {
   position: absolute;
   inset: auto -22px 6px auto;
