@@ -219,6 +219,24 @@ button:active {
   text-underline-offset: 3px;
 }
 
+.support-links {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.support-links p {
+  margin: 0;
+}
+
+.support-links a {
+  color: var(--ink);
+}
+
 .secondary {
   background: #52616d;
 }
