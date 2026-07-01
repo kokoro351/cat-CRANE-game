@@ -874,14 +874,19 @@ function referenceTapHoldInput(profile) {
 
 function referenceExcavatorInput(profile = stageReplayProfile || {}) {
   const excavator = state.machines.find((machine) => machine.kind === "excavator");
+  const brakeOrCoast = () => (state.speed > 68 ? -1 : 0);
   let x = 1;
   if (excavator) {
     const hit = machineHitRect(excavator);
     const load = loadWorldPosition();
     const gap = hit.x - load.x;
-    if (excavator.phase === "waiting") x = state.distance < excavator.triggerX + 20 ? 1 : 0;
-    else if (excavator.phase === "left") x = 0;
-    else if (excavator.phase === "right") x = gap < (profile.safeGap || 560) ? 0 : 1;
+    const stopLine = excavator.triggerX + 44;
+    if (excavator.phase === "waiting") x = state.distance < stopLine && state.speed < (profile.speed || 42) ? 1 : brakeOrCoast();
+    else if (excavator.phase === "left") x = brakeOrCoast();
+    else if (excavator.phase === "right") {
+      const hasLeftScene = excavator.x >= excavator.exitX - 120;
+      x = hasLeftScene && gap > 840 ? 1 : brakeOrCoast();
+    }
   }
   if (x > 0 && state.speed < (profile.speed || 42)) {
     x = state.angle < -0.08 || state.angularVelocity > -0.18 ? 1 : 0;
@@ -2009,7 +2014,11 @@ function drawEnding() {
   } else {
     drawPlainBeam(196, 426, 0.04);
     drawEndingCat(206, 336, 0.05);
-    drawEndingCaption(endingTime < 19.2 ? "ご安全に。また明日。" : "thank you for your playing");
+    if (endingTime < 19.2) {
+      drawEndingCaption("ご安全に。また明日。");
+    } else {
+      drawEndingCaption("thank you for your playing", "top");
+    }
     if (endingTime >= 19.2) drawDeveloperLink();
   }
 }
@@ -2180,13 +2189,50 @@ function drawEndingCat(x, y, rotation) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
-  if (beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
+  if (appScreen !== "ending" && beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
     ctx.drawImage(beamCatSprite, -52, -104, 96, 138);
   } else {
-    ctx.fillStyle = "#f0b429";
+    ctx.fillStyle = "#c98a43";
+    ctx.fillRect(-15, -48, 30, 48);
+    ctx.fillStyle = "#f4b15f";
     ctx.beginPath();
-    ctx.arc(0, -36, 24, 0, Math.PI * 2);
+    ctx.arc(0, -72, 24, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = "#f4b15f";
+    ctx.beginPath();
+    ctx.moveTo(-16, -88);
+    ctx.lineTo(-7, -110);
+    ctx.lineTo(2, -88);
+    ctx.moveTo(16, -88);
+    ctx.lineTo(7, -110);
+    ctx.lineTo(-2, -88);
+    ctx.fill();
+    ctx.fillStyle = "#f6d34b";
+    ctx.fillRect(-24, -100, 48, 13);
+    ctx.beginPath();
+    ctx.arc(0, -100, 18, Math.PI, 0);
+    ctx.fill();
+    ctx.fillStyle = "#25333f";
+    ctx.beginPath();
+    ctx.arc(-8, -75, 2.4, 0, Math.PI * 2);
+    ctx.arc(8, -75, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#25333f";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, -70);
+    ctx.lineTo(-4, -65);
+    ctx.moveTo(0, -70);
+    ctx.lineTo(4, -65);
+    ctx.stroke();
+    ctx.strokeStyle = "#c98a43";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(-14, -12);
+    ctx.lineTo(-24, 26);
+    ctx.moveTo(14, -12);
+    ctx.lineTo(28, 22);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -2203,13 +2249,16 @@ function drawStormWind() {
   }
 }
 
-function drawEndingCaption(text) {
+function drawEndingCaption(text, placement = "bottom") {
+  const top = placement === "top";
+  const y = top ? 52 : 586;
+  const textY = top ? 87 : 621;
   ctx.fillStyle = "rgb(23 33 43 / 0.72)";
-  ctx.fillRect(18, 586, W - 36, 56);
+  ctx.fillRect(18, y, W - 36, 56);
   ctx.fillStyle = "#fff";
   ctx.font = "900 19px system-ui, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(text, W / 2, 621);
+  ctx.fillText(text, W / 2, textY);
   ctx.textAlign = "left";
 }
 
