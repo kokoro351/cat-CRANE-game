@@ -59,6 +59,8 @@ const driveAccelResponse = 24;
 const driveCoastBrake = 16;
 const maxForwardSpeed = 112;
 const trolleyAccelDivisor = 40;
+const developerUrl = "https://natsuyasumi-shotengai.vercel.app/";
+let developerLinkBounds = null;
 const stages = [
   { name: "ステージ1", distance: 1500, obstacles: [], gates: [] },
   {
@@ -757,16 +759,6 @@ function buildStageReplay() {
   const saved = snapshotRunState();
   const previousScreen = appScreen;
   const profiles = replayProfilesForStage();
-  const excavatorProfile = profiles.find((profile) => profile.excavator);
-
-  if (excavatorProfile) {
-    restoreRunState(saved);
-    appScreen = previousScreen;
-    stageReplayStatus = "ready";
-    stageReplayProfile = { ...excavatorProfile };
-    return [{ t: 0, x: 0, y: 0, label: "COAST" }];
-  }
-
   for (const profile of profiles) {
     reset();
     appScreen = "stageDemo";
@@ -1971,6 +1963,7 @@ function updateEnding(dt) {
 }
 
 function drawEnding() {
+  developerLinkBounds = null;
   const p = Math.min(1, endingTime / 22);
   drawEndingSky(p);
   drawIndustrialBackground();
@@ -2017,7 +2010,32 @@ function drawEnding() {
     drawPlainBeam(196, 426, 0.04);
     drawEndingCat(206, 336, 0.05);
     drawEndingCaption(endingTime < 19.2 ? "ご安全に。また明日。" : "thank you for your playing");
+    if (endingTime >= 19.2) drawDeveloperLink();
   }
+}
+
+function drawDeveloperLink() {
+  const text = "\u958b\u767a\u5143\uff1a\u590f\u4f11\u307f\u306e\u5546\u5e97\u8857";
+  ctx.save();
+  ctx.font = "800 17px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const width = ctx.measureText(text).width + 28;
+  const height = 34;
+  const x = W / 2;
+  const y = H - 84;
+  developerLinkBounds = { x: x - width / 2, y: y - height / 2, w: width, h: height };
+
+  ctx.fillStyle = "rgb(255 255 255 / 0.88)";
+  ctx.strokeStyle = "#0f6b8f";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(developerLinkBounds.x, developerLinkBounds.y, width, height, 12);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#0f6b8f";
+  ctx.fillText(text, x, y);
+  ctx.restore();
 }
 
 function drawEndingSky(progress) {
@@ -2410,6 +2428,20 @@ tutorialButton.addEventListener("click", startTutorial);
 stageButton.addEventListener("click", () => showStageSelect("normal"));
 hardModeButton.addEventListener("click", () => showStageSelect("hard"));
 stageBackButton.addEventListener("click", showTitle);
+canvas.addEventListener("click", (event) => {
+  if (appScreen !== "ending" || !developerLinkBounds) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (event.clientX - rect.left) * W / rect.width;
+  const y = (event.clientY - rect.top) * H / rect.height;
+  const hit = x >= developerLinkBounds.x
+    && x <= developerLinkBounds.x + developerLinkBounds.w
+    && y >= developerLinkBounds.y
+    && y <= developerLinkBounds.y + developerLinkBounds.h;
+  if (!hit) return;
+  event.preventDefault();
+  window.open(developerUrl, "_blank", "noopener,noreferrer");
+});
+
 endingButton.addEventListener("click", (event) => {
   if (stageMode === "hard") {
     event.preventDefault();
