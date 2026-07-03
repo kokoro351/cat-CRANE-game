@@ -874,19 +874,14 @@ function referenceTapHoldInput(profile) {
 
 function referenceExcavatorInput(profile = stageReplayProfile || {}) {
   const excavator = state.machines.find((machine) => machine.kind === "excavator");
-  const brakeOrCoast = () => (state.speed > 68 ? -1 : 0);
   let x = 1;
   if (excavator) {
     const hit = machineHitRect(excavator);
     const load = loadWorldPosition();
     const gap = hit.x - load.x;
-    const stopLine = excavator.triggerX + 44;
-    if (excavator.phase === "waiting") x = state.distance < stopLine && state.speed < (profile.speed || 42) ? 1 : brakeOrCoast();
-    else if (excavator.phase === "left") x = brakeOrCoast();
-    else if (excavator.phase === "right") {
-      const hasLeftScene = excavator.x >= excavator.exitX - 120;
-      x = hasLeftScene && gap > 840 ? 1 : brakeOrCoast();
-    }
+    if (excavator.phase === "waiting") x = state.distance < excavator.triggerX + 20 ? 1 : 0;
+    else if (excavator.phase === "left") x = 0;
+    else if (excavator.phase === "right") x = gap < (profile.safeGap || 560) ? 0 : 1;
   }
   if (x > 0 && state.speed < (profile.speed || 42)) {
     x = state.angle < -0.08 || state.angularVelocity > -0.18 ? 1 : 0;
@@ -2186,10 +2181,11 @@ function drawPlainBeam(x, y, rotation) {
 }
 
 function drawEndingCat(x, y, rotation) {
+  if (appScreen === "ending") return;
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
-  if (appScreen !== "ending" && beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
+  if (beamCatSprite.complete && beamCatSprite.naturalWidth > 0) {
     ctx.drawImage(beamCatSprite, -52, -104, 96, 138);
   } else {
     ctx.fillStyle = "#c98a43";
